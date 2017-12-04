@@ -1,0 +1,36 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<isdecorate template="checkout/pt_orderconfirmation">
+
+	<isinclude template="util/modules"/>
+	<isinclude template="util/reporting/ReportOrder.isml"/>
+	<iscomment>
+		This template visualizes the order confirmation page. Note, that it
+		uses a different decorator template.
+		It displays the order related information, such as the order number,
+		creation date, payment information, order totals and shipments of
+		the order.
+	</iscomment>
+	
+	<div class="confirmation">
+		<div class="confirmation-message">
+
+			<isif condition="${!empty(pdict.ConfirmationSnippet)}">
+				<div id="klarna-checkout">
+					<isprint value="${pdict.ConfirmationSnippet}" encoding="off"/>
+				</div>
+			</isif>
+
+		</div>
+
+        <div class="order-confirmation-details">
+            <isorderdetails order="${pdict.Order}"/>
+        </div>
+
+        <div class="actions">
+            <a href="${URLUtils.http('Cart-ContinueShopping')}" class="continue">
+            	${Resource.msg('confirmation.returnshop','checkout',null)}
+            </a>
+        </div>
+	</div>
+
+</isdecorate>

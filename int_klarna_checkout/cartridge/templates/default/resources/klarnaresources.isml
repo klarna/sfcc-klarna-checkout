@@ -1,0 +1,18 @@
+<iscontent type="text/javascript" charset="UTF-8" compact="true"/>
+
+<isscript>
+	var URLUtils = require('dw/web/URLUtils');
+	
+	// klarna urls
+	var urls =  {
+        selectShippingMethod		: URLUtils.https('KlarnaCheckout-SelectShippingMethod').toString(),
+		updateSummary				: URLUtils.https('KlarnaCheckout-UpdateSummary').toString(),
+		klarnaUpdate 				: URLUtils.https('KlarnaCheckout-UpdateKlarnaCheckout').toString(),		
+		updateShippingAddress		: URLUtils.https('KlarnaCheckout-UpdateShippingAddress').toString(),	
+		updateShippingMethodList	: URLUtils.https('COShipping-UpdateShippingMethodList').toString()	
+	};
+
+</isscript>
+(function(app){
+	window.KlarnaUrls = <isprint value="${JSON.stringify(urls)}" encoding="off"/>;
+}(window.app = window.app || {}));

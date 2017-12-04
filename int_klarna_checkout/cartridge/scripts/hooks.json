@@ -1,0 +1,24 @@
+{
+	"hooks": [
+		{
+			"name": "dw.ocapi.shop.basket.calculate",
+			"script": "./cart/calculate.js"
+		},
+		{
+			"name": "app.payment.processor.BASIC_CREDIT",
+			"script": "./payment/processor/BASIC_CREDIT"
+		},
+		{
+			"name": "app.payment.processor.BASIC_GIFT_CERTIFICATE",
+			"script": "./payment/processor/BASIC_GIFT_CERTIFICATE"
+		},
+		{
+			"name": "app.payment.processor.KLARNA_CHECKOUT",
+			"script": "./payment/processor/KLARNA_CHECKOUT"
+		},
+		{
+			"name": "extra.merchant.data",
+			"script": "./EMD/KlarnaCheckoutBuildEMD_hooks.js"
+		}
+	]
+}

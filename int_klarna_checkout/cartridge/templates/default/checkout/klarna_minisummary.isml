@@ -1,0 +1,24 @@
+<iscontent type="text/html" charset="UTF-8" compact="true"/>
+<isinclude template="util/modules"/>
+<iscomment>
+	This template renders the summary of the current basket at the right hand side
+	of all checkout pages. It includes an order summary including order totals,
+	a list of all included shipments as well as the payment methods used to pay
+	the basket.
+</iscomment>
+
+<iscontentasset aid="cs-contact-number"/>
+
+<h3 class="section-header">
+	<isset name="editUrl" value="${URLUtils.url('Cart-Show')}" scope="page"/>
+	${Resource.msg('summary.title','checkout',null)} <a class="section-header-note" href="${editUrl}">${Resource.msg('global.edit','locale',null)}</a>
+</h3>
+
+<div class="checkout-mini-cart">			
+	<isminilineitems p_lineitemctnr="${pdict.Basket}"/>
+</div>
+
+<iscomment>render the order totals</iscomment>
+<div class="checkout-order-totals">
+	<isordertotals p_lineitemctnr="${pdict.Basket}" p_showshipmentinfo="${false}" p_shipmenteditable="${false}" p_totallabel="${Resource.msg('global.ordertotal','locale',null)}"/>
+</div>
