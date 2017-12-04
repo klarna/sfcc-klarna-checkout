@@ -10,6 +10,7 @@
         this.shipping_options = [];
         this.shipping_countries = [];
         this.options = new Options();
+        this.gui = new Gui();
     }
 
     /*
@@ -69,6 +70,10 @@
         this.color_checkbox_checkmark = '#FF9900';
         this.color_header = '#FF9900';
         this.color_link = '#FF9900';
+    }
+    
+    function Gui() {
+    	this.options = [];
     }
     
     function ShippingOption() {

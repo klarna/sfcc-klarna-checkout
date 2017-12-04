@@ -214,12 +214,12 @@
 
             if (!empty(brand)){
             	item.product_identifiers = item.product_identifiers || {};
-				item.brand = brand;
+				item.product_identifiers.brand = brand;
 			}	
 			
             if (!empty(categoryPath)){
             	item.product_identifiers = item.product_identifiers || {};
-				item.category_path = categoryPath;
+				item.product_identifiers.category_path = categoryPath;
 			}
             
             if (li.bonusProductLineItem) {
@@ -279,19 +279,17 @@
     	};
     }
 
-    function _getProductCategoryPath (product)
-	{
+    function _getProductCategoryPath (product) {
 		var path;
 		// get category from products primary category
 		var category = product.primaryCategory;
 
 		// get category from product master if not set at variant
-		if( category === null && product.variant )
-		{
+		if ( category === null && product.variant ) {
 			category = product.variationModel.master.primaryCategory;
 		}
-		if ( category !== null )
-		{
+
+		if ( category !== null ) {
 			path = new ArrayList();
 			while( category.parent != null )
 			{

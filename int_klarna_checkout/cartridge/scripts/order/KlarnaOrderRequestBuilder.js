@@ -44,6 +44,7 @@
         	.buildLocale(basket, localeObject)
             .buildBilling(basket, localeObject)
             .buildOptions(localeObject)
+            .buildGui()
             .buildExternalPaymentProviders()
             .buildOrderLines(basket, localeObject)
             .buildGiftPayments(basket)
@@ -171,6 +172,19 @@
 		this.context.options.color_header = Site.getCurrent().getCustomPreferenceValue('kcColorHeader');
 		this.context.options.color_link = Site.getCurrent().getCustomPreferenceValue('kcColorLink');
     	
+    	return this;
+    };
+
+    KlarnaOrderRequestBuilder.prototype.buildGui = function () {
+
+    	if (Site.getCurrent().getCustomPreferenceValue('kcGuiDisable_autofocus')) {
+    		this.context.gui.options.push('disable_autofocus');
+    	}
+
+    	if (Site.getCurrent().getCustomPreferenceValue('kcGuiMinimal_confirmation')) {
+    		this.context.gui.options.push('minimal_confirmation');
+    	}
+
     	return this;
     };
 
@@ -355,21 +369,21 @@
             item.tax_rate = (country === 'US') ? 0 : Math.round(li.taxRate*10000);
             item.total_amount = Math.round(itemPrice);
             item.total_tax_amount = (country === 'US') ? 0 : Math.round(li.tax.value*100);
-            
+
             if (!empty(brand)){
             	item.product_identifiers = item.product_identifiers || {};
-				item.brand = brand;
+				item.product_identifiers.brand = brand;
 			}	
-			
+
             if (!empty(categoryPath)){
             	item.product_identifiers = item.product_identifiers || {};
-				item.category_path = categoryPath;
+				item.product_identifiers.category_path = categoryPath;
 			}
 
             if (li.bonusProductLineItem) {
             	item.merchant_data = ORDER_LINE_TYPE.BONUS_PRODUCT;
             }
-            
+
             // Add product-specific shipping line adjustments
 			if (!empty(li.shippingLineItem)) {
 				addPriceAdjustments(li.shippingLineItem.priceAdjustments.toArray(), li.productID, null, country, context);
@@ -423,19 +437,17 @@
     	};
     }
     
-    function _getProductCategoryPath (product)
-	{
+    function _getProductCategoryPath (product) {
 		var path;
 		// get category from products primary category
 		var category = product.primaryCategory;
 
 		// get category from product master if not set at variant
-		if( category === null && product.variant )
-		{
+		if ( category === null && product.variant ) {
 			category = product.variationModel.master.primaryCategory;
 		}
-		if ( category !== null )
-		{
+
+		if ( category !== null ) {
 			path = new ArrayList();
 			while( category.parent != null )
 			{
@@ -444,7 +456,7 @@
 			}
 			path = path.join(' > ').substring( 0, 749 ); //Maximum 750 characters per Klarna's documentation
 		}		
-		
+
 		return path;		
 	}
 

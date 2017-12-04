@@ -156,6 +156,22 @@
                 <min-length>0</min-length>
                 <default-value>#84bd00</default-value>
             </attribute-definition>
+            <attribute-definition attribute-id="kcGuiDisable_autofocus">
+                <display-name xml:lang="x-default">Disable Autofocus</display-name>
+                <description xml:lang="x-default">Define the checkout behaviour (GUI).</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcGuiMinimal_confirmation">
+                <display-name xml:lang="x-default">Minimal Confirmation</display-name>
+                <description xml:lang="x-default">Define the checkout behaviour (GUI).</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
             <attribute-definition attribute-id="kcRadiusBorder">
                 <display-name xml:lang="x-default">Radius border</display-name>
                 <description xml:lang="x-default">Border radius to be used in Klarna Checkout iFrame</description>
@@ -258,6 +274,8 @@
                 <attribute attribute-id="kcColorCheckboxCheckmark"/>
                 <attribute attribute-id="kcColorHeader"/>
                 <attribute attribute-id="kcColorLink"/>
+                <attribute attribute-id="kcGuiDisable_autofocus"/>
+                <attribute attribute-id="kcGuiMinimal_confirmation"/>
 				<attribute attribute-id="kcAttachments"/>
 				<attribute attribute-id="kcVCNEnabled"/>
 				<attribute attribute-id="vcnPrivateKey"/>
