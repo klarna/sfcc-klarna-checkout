@@ -5,6 +5,7 @@
  * @module models/CartModel
  */
 
+var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
 var BasketMgr = require('dw/order/BasketMgr');
@@ -13,9 +14,9 @@ var ShippingMgr = require('dw/order/ShippingMgr');
 var PaymentMgr = require('dw/order/PaymentMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 
-var CartModel = require('int_klarna_checkout/cartridge/scripts/models/CartModel');
-var ORDER_LINE_TYPE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
-var KLARNA_CHECKOUT = require('int_klarna_checkout/cartridge/scripts/payment/processor/KLARNA_CHECKOUT.js');
+var ORDER_LINE_TYPE = require('~/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
+var KLARNA_CHECKOUT = require('~/cartridge/scripts/payment/processor/KLARNA_CHECKOUT.js');
+var CartModel = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/models/CartModel');
 
 /**
  * Cart helper providing enhanced cart functionality

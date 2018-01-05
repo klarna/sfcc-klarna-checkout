@@ -4,9 +4,11 @@
  * helper methods.
  * @module models/CartModel
  */
-var Transaction = require('dw/system/Transaction');
+
+var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
+var Transaction = require('dw/system/Transaction');
 var AbstractModel = require('./AbstractModel');
 var ArrayList = require('dw/util/ArrayList');
 var BasketMgr = require('dw/order/BasketMgr');
@@ -319,7 +321,7 @@ var CartModel = AbstractModel.extend({
      */
     addBonusProduct: function (bonusDiscountLineItem, product, selectedOptions, quantity) {
         // TODO: Should this actually be using the dw.catalog.ProductOptionModel.UpdateProductOptionSelections method instead?
-        var UpdateProductOptionSelections = require('app_storefront_core/cartridge/scripts/cart/UpdateProductOptionSelections');
+        var UpdateProductOptionSelections = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/cart/UpdateProductOptionSelections');
         var ScriptResult = UpdateProductOptionSelections.update({
             SelectedOptions: selectedOptions,
             Product: product
@@ -548,7 +550,7 @@ var CartModel = AbstractModel.extend({
      * @returns {Boolean} EnableCheckout
      */
     validateForCheckout: function () {
-        var ValidateCartForCheckout = require('app_storefront_core/cartridge/scripts/cart/ValidateCartForCheckout');
+        var ValidateCartForCheckout = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/cart/ValidateCartForCheckout');
         return ValidateCartForCheckout.validate({
             Basket: this.object,
             ValidateTax: false

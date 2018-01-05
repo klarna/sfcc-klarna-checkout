@@ -4,6 +4,8 @@
  * @module controllers/KlarnaPlaceOrder
 */
 
+var STOREFRONT_CARTRIDGE = require('~/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
+
 /* API Includes */
 var Transaction = require('dw/system/Transaction');
 var OrderMgr = require('dw/order/OrderMgr');
@@ -13,8 +15,9 @@ var HookMgr = require('dw/system/HookMgr');
 var Status = require('dw/system/Status');
 
 /* Script Modules */
-var app = require('~/cartridge/scripts/app');
+var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
 var Order = app.getModel('Order');
+var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
 var KlarnaHttpService = require('~/cartridge/scripts/common/KlarnaHttpService.ds');
 var KlarnaApiContext = require('~/cartridge/scripts/common/KlarnaApiContext');
 var KLARNA_PAYMENT_METHOD = require('int_klarna_checkout/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
@@ -90,7 +93,8 @@ function start(context) {
 
     } else if (handlePaymentsResult.pending) {
     	return {
-            order_created: true
+            order_created: true,
+            Order: order
         };
 	}
 
@@ -113,6 +117,7 @@ function start(context) {
  * @return {Object} JSON object containing information about missing payments, errors, or an empty object if the function is successful.
  */
 function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
+	var kcoAuthorizationResult = {};
 
     if (order.getTotalNetPrice() !== 0.00) {
 
@@ -141,7 +146,7 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
             	var authorizationResult = {};
             	var processor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
             	if (processor.ID === 'KLARNA_CHECKOUT') {
-        			authorizationResult = KLARNA_CHECKOUT.Authorize({
+            		kcoAuthorizationResult = authorizationResult = KLARNA_CHECKOUT.Authorize({
                     	Order: order, 
                     	PaymentInstrument: paymentInstrument, 
                     	KlarnaOrderObj: klarnaOrderObj, 
@@ -150,11 +155,13 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
                 	});
 
             	} else if (HookMgr.hasHook('app.payment.processor.' + processor.ID)) {
-            		authorizationResult = HookMgr.callHook('app.payment.processor.' + processor.ID, 'Authorize', {
-                        Order: order,
-                        OrderNo: order.getOrderNo(),
-                        PaymentInstrument: paymentInstrument
-                    });
+            		if (!isPendingOrder) {
+	            		authorizationResult = HookMgr.callHook('app.payment.processor.' + processor.ID, 'Authorize', {
+	                        Order: order,
+	                        OrderNo: order.getOrderNo(),
+	                        PaymentInstrument: paymentInstrument
+	                    });
+            		}
 
             	} else {
             		authorizationResult = {not_supported: true};
@@ -165,13 +172,11 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
                         error: true
                     };
                 }
-
-                return authorizationResult;
             }
         }
     }
 
-    return {};
+    return kcoAuthorizationResult;
 }
 
 /**
@@ -183,7 +188,7 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
 function createOrder(klarnaOrderObject) {
 	var cart, validationResult, order;
 
-	cart = app.getModel('KlarnaCart').goc();
+	cart = KlarnaCartModel.goc();
 
 	Transaction.wrap(function () {
 		cart.restore(klarnaOrderObject);

@@ -424,7 +424,7 @@ function QuantityLineItem() {
 }
 
 module.exports = {
-    calculateNonGiftCertificateAmount: calculateNonGiftCertificateAmount,	
+    calculateNonGiftCertificateAmount: calculateNonGiftCertificateAmount,
 	determineUniqueShipmentID: determineUniqueShipmentID,
 	ShippingAddress: ShippingAddress,
 	createShippingAddress: createShippingAddress,

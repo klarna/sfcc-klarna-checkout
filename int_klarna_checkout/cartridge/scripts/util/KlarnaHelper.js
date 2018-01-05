@@ -4,6 +4,8 @@
  * @module util/KlarnaHelper
  */
 
+var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
+
 var CustomObjectMgr = require('dw/object/CustomObjectMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 var Money = require('dw/value/Money');
@@ -15,7 +17,7 @@ var Logger = require('dw/system/Logger');
  */
 exports.getLocaleObject = function (countryCode) {
 	if (!countryCode) {
-		var Countries = require('app_storefront_core/cartridge/scripts/util/Countries');
+		var Countries = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/util/Countries');
 		countryCode = Countries.getCurrent({CurrentRequest: request}).countryCode;
 	}
 	

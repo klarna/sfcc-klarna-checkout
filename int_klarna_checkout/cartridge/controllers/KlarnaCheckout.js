@@ -4,6 +4,8 @@
  * @module controllers/KlarnaCheckout
 */
 
+var STOREFRONT_CARTRIDGE = require('~/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
+
 /* API Includes */
 var URLUtils = require('dw/web/URLUtils');
 var Site = require('dw/system/Site');
@@ -17,14 +19,15 @@ var PaymentMgr = require('dw/order/PaymentMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 
 /* Script Modules */
-var app = require('~/cartridge/scripts/app');
-var guard = require('~/cartridge/scripts/guard');
+var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
+var guard = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/guard');
 var utils = require('~/cartridge/scripts/util/KlarnaHelper');
 var KlarnaHttpService = require('~/cartridge/scripts/common/KlarnaHttpService.ds');
 var KlarnaApiContext = require('~/cartridge/scripts/common/KlarnaApiContext');
 var KlarnaOrderRequestBuilder = require('~/cartridge/scripts/order/KlarnaOrderRequestBuilder');
-var KLARNA_CHECKOUT = require('int_klarna_checkout/cartridge/scripts/payment/processor/KLARNA_CHECKOUT');
-
+var KLARNA_CHECKOUT = require('~/cartridge/scripts/payment/processor/KLARNA_CHECKOUT');
+var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
+var KlarnaPlaceOrderController = require('~/cartridge/controllers/KlarnaPlaceOrder');
 var TransientAddress = app.getModel('TransientAddress');
 
 /**
@@ -33,7 +36,7 @@ var TransientAddress = app.getModel('TransientAddress');
 function start(context) {
 	var cart, physicalShipments, localeObject, shippingAddress, validationResult, checkoutSnippet;
 
-	cart = app.getModel('KlarnaCart').get();
+	cart = KlarnaCartModel.get();
 
 	if (!cart) {
 		response.redirect(URLUtils.https('Cart-Show'));
@@ -48,7 +51,7 @@ function start(context) {
         return;
     }
 
-	pageMeta = require('~/cartridge/scripts/meta');
+	pageMeta = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/meta');
     pageMeta.update({
         pageTitle: 'Klarna Checkout'
     });
@@ -93,7 +96,7 @@ function start(context) {
  * @transactional
  */
 function update() {
-	var cart = app.getModel('KlarnaCart').goc();
+	var cart = KlarnaCartModel.goc();
 	var klarnaOrderObject = JSON.parse(request.httpParameterMap.requestBodyAsString);
 
 	if (!klarnaOrderObject) {
@@ -112,7 +115,7 @@ function update() {
 	    showShippingMethods: !empty(klarnaOrderObject.selected_shipping_option)
 	}).get();
 
-	let responseUtils = require('~/cartridge/scripts/util/Response');
+	let responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
 	responseUtils.renderJSON(orderUpdateResponse);
 }
 
@@ -125,7 +128,7 @@ function validation() {
 	var order = OrderMgr.searchOrder('externalOrderNo = {0}', [klarnaOrderObject.order_id]);
 
 	if (!order) {
-		order = app.getController('KlarnaPlaceOrder').CreateOrder(klarnaOrderObject);
+		order = KlarnaPlaceOrderController.CreateOrder(klarnaOrderObject);
 
 		if (!order) {
 			response.redirect(URLUtils.https('Cart-Show'));
@@ -179,7 +182,7 @@ function confirmation() {
 function updateKlarnaCheckout() {
 	var cart, localeObject, isUpdated;
 
-	cart = app.getModel('KlarnaCart').get();
+	cart = KlarnaCartModel.get();
 
 	if (!cart) {
 		response.redirect(URLUtils.https('Cart-Show'));
@@ -198,7 +201,7 @@ function updateKlarnaCheckout() {
     	isUpdated = updateKlarnaOrder(cart, localeObject);
     }
 
-    let responseUtils = require('~/cartridge/scripts/util/Response');
+    let responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
     if (!isUpdated) {
     	responseUtils.renderJSON({success: false});
     } else {
@@ -224,7 +227,7 @@ function push() {
 
 	klarnaOrderObject = getKlarnaOrder(klarnaOrderID, localeObject, true);
 
-	var placeOrderResult = app.getController('KlarnaPlaceOrder').Start({
+	var placeOrderResult = KlarnaPlaceOrderController.Start({
 		klarnaOrderObject: klarnaOrderObject,
 		localeObject: localeObject
 	});
@@ -240,8 +243,8 @@ function push() {
  * Select a shipping method for the default shipment.
  */
 function selectShippingMethod() {
-	var cart = app.getModel('KlarnaCart').get();
-	let responseUtils = require('~/cartridge/scripts/util/Response');
+	var cart = KlarnaCartModel.get();
+	let responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
 
 	if (!cart) {
 		responseUtils.renderJSON({success: false});
@@ -278,8 +281,8 @@ function selectShippingMethod() {
  */
 function updateShippingAddress() {
 	var shippingAddress, responseObject;
-	var cart = app.getModel('KlarnaCart').get();
-	let responseUtils = require('~/cartridge/scripts/util/Response');
+	var cart = KlarnaCartModel.get();
+	let responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
 
 	if (!cart) {
 		responseUtils.renderJSON({success: false});
@@ -340,7 +343,7 @@ function updateShippingAddress() {
  *  Renders the order summary
  */
 function updateSummary() {
-    var cart = app.getModel('Cart').get();
+    var cart = KlarnaCartModel.get();
 
     Transaction.wrap(function () {
         cart.calculate();
@@ -365,7 +368,7 @@ function notification() {
     klarnaOrderObject = getKlarnaOrder(klarnaOrderID, localeObject, true);
 
     if (klarnaOrderObject) {
-	    app.getController('KlarnaPlaceOrder').Start({
+    	KlarnaPlaceOrderController.Start({
 			klarnaOrderObject: klarnaOrderObject,
 			localeObject: localeObject,
 			isPendingOrder: true
@@ -385,7 +388,7 @@ function notification() {
 function prepareShipping(shippingAddress) {
 	var cart, applicableShippingMethods, currentShippingMethod, basketAddress, defaultShipmentID;
 
-	cart = app.getModel('KlarnaCart').get();
+	cart = KlarnaCartModel.get();
 	applicableShippingMethods = cart.getApplicableShippingMethods(shippingAddress);
 	currentShippingMethod = cart.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 	defaultShipmentID = cart.getDefaultShipment().getID();
@@ -406,7 +409,7 @@ function prepareShipping(shippingAddress) {
  * If the order creation failed, it returns a JSON object with an error key and a boolean value.
  */
 function startPlaceOrder(context) {
-	var placeOrderResult = app.getController('KlarnaPlaceOrder').Start(context);
+	var placeOrderResult = KlarnaPlaceOrderController.Start(context);
     if (placeOrderResult.error) {
         start(placeOrderResult);
     } else if (placeOrderResult.order_created) {
@@ -421,13 +424,13 @@ function startPlaceOrder(context) {
  * @param {String} confirmationSnippet Klarna Html confirmation snippet
  */
 function showConfirmation(order, confirmationSnippet) {
-	var cart = app.getModel('KlarnaCart').get();
+	var cart = KlarnaCartModel.get();
 
 	Transaction.wrap(function () {
 		cart.clear();
 	});
 
-	var pageMeta = require('~/cartridge/scripts/meta');
+	var pageMeta = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/meta');
     pageMeta.update({
     	pageTitle: 'Klarna Confirmation'
 	});

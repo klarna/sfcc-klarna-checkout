@@ -1,5 +1,7 @@
 'use strict';
 
+var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
+
 /* API Includes */
 var Transaction = require('dw/system/Transaction');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
@@ -9,10 +11,11 @@ var Logger = require('dw/system/Logger');
 var Site = require('dw/system/Site');
 
 /* Script Modules */
-var app = require('~/cartridge/scripts/app');
-var Utils = require('~/cartridge/scripts/checkout/Utils.ds');
+var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
+var Utils = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/checkout/Utils.ds');
 var KlarnaHttpService = require('~/cartridge/scripts/common/KlarnaHttpService.ds');
 var KlarnaApiContext = require('~/cartridge/scripts/common/KlarnaApiContext');
+var KlarnaCheckoutController = require('~/cartridge/controllers/KlarnaCheckout');
 
 /**
  * Create the Klarna Checkout payment instrument.
@@ -69,7 +72,7 @@ function Authorize(args) {
     });
 
     if (!klarnaOrderObj.fraud_status) {
-    	klarnaOrderObj = app.getController('KlarnaCheckout').GetKlarnaOrder(klarnaOrderID, localeObject, true);
+    	klarnaOrderObj = KlarnaCheckoutController.GetKlarnaOrder(klarnaOrderID, localeObject, true);
     	if (!klarnaOrderObj) {
     		return {error: true};
     	}
