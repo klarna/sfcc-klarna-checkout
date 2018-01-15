@@ -14,5 +14,5 @@
 
 </isscript>
 (function(app){
-	window.KlarnaUrls = <isprint value="${JSON.stringify(urls)}" encoding="off"/>;
+	window.KlarnaUrls = <isprint value="${JSON.stringify(urls)}" encoding="on"/>;
 }(window.app = window.app || {}));
