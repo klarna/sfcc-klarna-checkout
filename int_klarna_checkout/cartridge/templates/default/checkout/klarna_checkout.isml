@@ -33,10 +33,23 @@
 <isif condition="${!empty(pdict.CheckoutSnippet)}">
 	<legend>${Resource.msg('klarna.checkout.displayName','klarna','')}</legend>
 
-	<div id="klarna-checkout">
-		<isprint value="${pdict.CheckoutSnippet}" encoding="off" />
-	</div>
-	
+	<input id="klarnaCheckoutSnippet" type="hidden" value="${pdict.CheckoutSnippet}" />
+	<div id="klarna-checkout"></div>
+	<script>
+		var klarnaCheckoutCont = document.getElementById('klarna-checkout');
+		klarnaCheckoutCont.innerHTML = document.getElementById('klarnaCheckoutSnippet').value;
+		var scriptsTags = klarnaCheckoutCont.getElementsByTagName('script')
+	    // This is necessary otherwise the scripts tags are not going to be evaluated
+	    for (var i = 0; i < scriptsTags.length; i++) {
+       		var parentNode = scriptsTags[i].parentNode
+	        var newScriptTag = document.createElement('script')
+	        newScriptTag.type ='text/javascript'
+	        newScriptTag.text = scriptsTags[i].text
+	        parentNode.removeChild(scriptsTags[i])
+	        parentNode.appendChild(newScriptTag)
+	    }
+	</script>
+
 	<input name="klarna_total" value="${(pdict.Basket.getAdjustedMerchandizeTotalPrice(true).value*100).toFixed(0)}" type="hidden" />
 
 </isif>
