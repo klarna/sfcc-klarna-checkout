@@ -1,4 +1,0 @@
-<iscontent type="application/json" charset="UTF-8" compact="true"/>
-<isstatus value="400"/>
-<isscript>var json = JSON.stringify(pdict.object);</isscript>
-<isprint value="${json}" encoding="off"/>
