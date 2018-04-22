@@ -35,11 +35,11 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <value-definitions>
-                    <value-definition>
+                    <value-definition default="true">
                         <display xml:lang="x-default">AUTHORISE</display>
                         <value>AUTHORISE</value>
                     </value-definition>
-                    <value-definition default="true">
+                    <value-definition>
                         <display xml:lang="x-default">DIRECT CAPTURE</display>
                         <value>DIRECT_CAPTURE</value>
                     </value-definition>
@@ -51,7 +51,7 @@
                 <type>boolean</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
-                <default-value>true</default-value>
+                <default-value>false</default-value>
             </attribute-definition>
             <attribute-definition attribute-id="kcShippingDetails">
                 <display-name xml:lang="x-default">Shipping details message</display-name>
