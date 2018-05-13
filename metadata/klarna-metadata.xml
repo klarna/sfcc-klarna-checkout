@@ -227,6 +227,14 @@
                 <externally-managed-flag>false</externally-managed-flag>
                 <default-value>false</default-value>
             </attribute-definition>
+            <attribute-definition attribute-id="kcCancellationTermsUrl">
+                <display-name xml:lang="x-default">Cancellation Terms URL</display-name>
+                <description xml:lang="x-default">URL of merchant cancellation terms. Available for DE &amp; AT markets.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
 			<attribute-definition attribute-id="kcVCNEnabled">
                 <display-name xml:lang="x-default">Virtual Card Network Enabled</display-name>
                 <description xml:lang="x-default">If set to true SFCC will create Virtual Card Network settlement from every Klarna order. Default is false</description>
@@ -256,6 +264,7 @@
                 <attribute attribute-id="kcPaymentMode"/>
                 <attribute attribute-id="kcServiceName"/>
                 <attribute attribute-id="kcTermsAndConditionsUrl"/>
+                <attribute attribute-id="kcCancellationTermsUrl"/>
                 <attribute attribute-id="kcPrefillCheckoutFields"/>
                 <attribute attribute-id="kcExternalPaymentMethods"/>
                 <attribute attribute-id="kcExternalCheckouts"/>
