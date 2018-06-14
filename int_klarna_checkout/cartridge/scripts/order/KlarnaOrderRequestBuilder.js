@@ -16,6 +16,7 @@
     var Site = require('dw/system/Site');
     var HookMgr = require('dw/system/HookMgr');
     var ArrayList = require('dw/util/ArrayList');
+    var OrderMgr = require('dw/order/OrderMgr');
 
     function KlarnaOrderRequestBuilder() {
         this.context = null;
@@ -41,6 +42,7 @@
 
         var requestBodyObject = this.init()
         	.setCustomerReference(basket)
+        	.setOrderReferences()
         	.buildLocale(basket, localeObject)
             .buildBilling(basket, localeObject)
             .buildOptions(localeObject)
@@ -69,7 +71,13 @@
     	
         return this;
     };
-    
+
+    KlarnaOrderRequestBuilder.prototype.setOrderReferences = function () {
+    	this.context.merchant_reference1 = OrderMgr.createOrderSequenceNo();
+
+        return this;
+    };
+
     KlarnaOrderRequestBuilder.prototype.setCustomerReference = function (basket) {
     	var currentCustomer = basket.getCustomer();
     	

@@ -36,10 +36,10 @@ function start(context) {
 	localeObject = context.localeObject;
 	isPendingOrder = context.isPendingOrder;
 
-	order = OrderMgr.searchOrder('externalOrderNo = {0}', [klarnaOrderObj.order_id]);
+	order = OrderMgr.getOrder(klarnaOrderObj.merchant_reference1);
 
 	if (!order) {
-		order = createOrder(klarnaOrderObj);
+		order = createOrder(klarnaOrderObj, localeObject);
 		if (!order) {
 			return {
 				error: true,
@@ -56,8 +56,6 @@ function start(context) {
 	}
 
 	KLARNA_CHECKOUT.Handle({Basket: order});
-
-	updateKlarnaOrderMerchantReferences(klarnaOrderObj.order_id, localeObject, order.orderNo);
 
 	var handlePaymentsResult = handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder);
 
@@ -185,7 +183,7 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
  * @transactional
  * @return  {dw.order.Order} order
  */
-function createOrder(klarnaOrderObject) {
+function createOrder(klarnaOrderObject, localeObject) {
 	var cart, validationResult, order;
 
 	cart = KlarnaCartModel.goc();
@@ -202,7 +200,18 @@ function createOrder(klarnaOrderObject) {
     Transaction.begin();
 
     try {
-    	order = OrderMgr.createOrder(cart.object);
+    	if (klarnaOrderObject.merchant_reference1) {
+    		order = OrderMgr.createOrder(cart.object, klarnaOrderObject.merchant_reference1);
+    	} else {
+
+    		if (!localeObject) {
+    			var utils = require('~/cartridge/scripts/util/KlarnaHelper');
+    			localeObject = utils.getLocaleObject();
+    		}
+
+    		order = OrderMgr.createOrder(cart.object);
+    		updateKlarnaOrderMerchantReferences(klarnaOrderObject.order_id, localeObject, order.orderNo);
+    	}
 
 	    if (klarnaOrderObject.merchant_reference2) {
 	    	setOrderCustomer(order, klarnaOrderObject.merchant_reference2)

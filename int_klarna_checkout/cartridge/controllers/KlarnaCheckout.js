@@ -91,7 +91,7 @@ function start(context) {
 }
 
 /**
- * Updates the Klarna order when a shipping method or address in the checkout has changed
+ * Updates the Klarna order when a shipping method or address if the checkout has changed
  *
  * @transactional
  */
@@ -125,7 +125,8 @@ function update() {
 function validation() {
 	var klarnaOrderObject = JSON.parse(request.httpParameterMap.requestBodyAsString);
 
-	var order = OrderMgr.searchOrder('externalOrderNo = {0}', [klarnaOrderObject.order_id]);
+	//var order = OrderMgr.searchOrder('externalOrderNo = {0}', [klarnaOrderObject.order_id]);
+	var order = OrderMgr.getOrder(klarnaOrderObject.merchant_reference1);
 
 	if (!order) {
 		order = KlarnaPlaceOrderController.CreateOrder(klarnaOrderObject);
@@ -426,9 +427,11 @@ function startPlaceOrder(context) {
 function showConfirmation(order, confirmationSnippet) {
 	var cart = KlarnaCartModel.get();
 
-	Transaction.wrap(function () {
-		cart.clear();
-	});
+	if (cart) {
+		Transaction.wrap(function () {
+			cart.clear();
+		});
+	}
 
 	var pageMeta = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/meta');
     pageMeta.update({
