@@ -10,7 +10,7 @@
     Builder.prototype.buildRequest = function (params) {
         throw new Error(log('buildRequest'));
     };
-    
+
     Builder.prototype.buildResponse = function (params) {
         throw new Error(log('buildResponse'));
     };
@@ -20,5 +20,4 @@
     };
 
     module.exports = Builder;
-
 }());

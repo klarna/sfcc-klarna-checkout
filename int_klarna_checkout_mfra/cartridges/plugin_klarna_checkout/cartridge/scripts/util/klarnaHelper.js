@@ -12,79 +12,132 @@ var Locale = require('dw/util/Locale');
 
 /**
  * Get Klarna locale object
- * @return {dw.web.URL} the last called URL
+ * @param {string} country ISO 3166-1 country code
+ * @param {string} localeID request object
+ * @returns {dw.object.CustomObject} the locale object
  */
-exports.getLocaleObject = function (countryCode, req) {
-	if (!countryCode && req) {
-		var currentLocale = Locale.getLocale(req.locale.id);
-		countryCode = currentLocale.country;
-	}
-	
-	try {
-		var localeObject = CustomObjectMgr.getCustomObject('KlarnaCountries', countryCode);
-		
-		if (!localeObject) {
-			throw new Error('Klarna - No active locale custom object found');
-		}
+function getLocaleObject(country, localeID) {
+    var localeObject;
+    var countryCode = country;
 
-	} catch (e) {
-		Logger.error(e);
-		return null;
-	}
+    if (!countryCode && localeID) {
+        var currentLocale = Locale.getLocale(localeID);
+        countryCode = currentLocale.country;
+    }
 
-	return localeObject;
-};
+    try {
+        localeObject = CustomObjectMgr.getCustomObject('KlarnaCountries', countryCode);
+        if (!localeObject) {
+            throw new Error('Klarna - No active locale custom object found');
+        }
+    } catch (e) {
+        Logger.error(e);
+        return null;
+    }
+
+    return localeObject;
+}
 
 /**
  * Calculates Payment Transaction Totals.
- * 
+ *
  * @param {dw.order.Basket} basket The basket to calculate the payment transaction totals for
- * @return {Boolean} true if successful, false otherwise
+ * @return {boolean} true if successful, false otherwise
  */
-exports.calculatePaymentTransactionTotals = function (basket) {
+function calculatePaymentTransactionTotals(basket) {
     var paymentInstruments = basket.getPaymentInstruments();
     var iter = paymentInstruments.iterator();
     var paymentInstrument = null;
-	var nonGCPaymentInstrument = null;
-	var giftCertTotal = new Money(0.0, basket.currencyCode);
+    var nonGCPaymentInstrument = null;
+    var giftCertTotal = new Money(0.0, basket.currencyCode);
 
     // locate any non-gift certificate payment instrument
-    while(iter.hasNext())
-    {
-    	paymentInstrument = iter.next();
-    	if (PaymentInstrument.METHOD_GIFT_CERTIFICATE.equals(paymentInstrument.paymentMethod)) {
-    		giftCertTotal = giftCertTotal.add(paymentInstrument.getPaymentTransaction().getAmount());
-    		continue;
-    	}
+    while (iter.hasNext()) {
+        paymentInstrument = iter.next();
+        if (!PaymentInstrument.METHOD_GIFT_CERTIFICATE.equals(paymentInstrument.paymentMethod)) {
+            nonGCPaymentInstrument = paymentInstrument;
+            break;
+        }
 
-    	nonGCPaymentInstrument = paymentInstrument;
-    	break;
+        giftCertTotal = giftCertTotal.add(paymentInstrument.getPaymentTransaction().getAmount());
     }
-  
-	var orderTotal = basket.totalGrossPrice;
+
+    var orderTotal = basket.totalGrossPrice;
 
     if (!nonGCPaymentInstrument) {
-    	// if we have no other payment types and the gift certificate
-    	// doesn't cover the order we need to error out.
-    	if (giftCertTotal < orderTotal) {
-    		return false;
-    	} else {  		
-    		return true;
-    	}
+        // if we have no other payment types and the gift certificate
+        // doesn't cover the order we need to error out.
+        if (giftCertTotal < orderTotal) {
+            return false;
+        }
+
+        return true;
     }
 
-	// calculate the amount to be charged for the 
+	// calculate the amount to be charged for the
 	// non-gift certificate payment instrument
-    var COHelpers = require('app_storefront_base/cartridge/scripts/checkout/checkoutHelpers');
+    var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
     var amount = COHelpers.calculateNonGiftCertificateAmount(basket);
 
     // now set the non-gift certificate payment instrument total.
     if (amount.value < 0.0) {
-    	return false;
-    } else {
-        nonGCPaymentInstrument.paymentTransaction.setAmount(amount);
+        return false;
     }
+
+    nonGCPaymentInstrument.paymentTransaction.setAmount(amount);
 
     return true;
 }
 
+/**
+ * Creates the order in SFCC
+ *
+ * @transactional
+ * @param {Object} klarnaOrderObject Klarna order
+ * @return  {dw.order.Order} order
+ */
+function createOrder(klarnaOrderObject) {
+    var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
+    var cart = KlarnaCartModel.goc();
+
+    Transaction.wrap(function () {
+        cart.restore(klarnaOrderObject);
+    });
+
+    var validationResult = HookMgr.callHook(
+        'app.validate.basket',
+        'validateBasket',
+        cart.object,
+        false
+    );
+    if (validationResult.error) {
+        return;
+    }
+
+    var order;
+    Transaction.begin();
+    try {
+        order = OrderMgr.createOrder(cart.object);
+
+        if (klarnaOrderObject.merchant_reference2) {
+            setOrderCustomer(order, klarnaOrderObject.merchant_reference2)
+        }
+
+        order.setExternalOrderNo(klarnaOrderObject.order_id);
+        order.setExternalOrderStatus(klarnaOrderObject.status);
+        order.setExternalOrderText(KLARNA_PAYMENT_METHOD);
+
+    } catch (e) {
+        Transaction.rollback();
+        return;
+    }
+    Transaction.commit();
+
+    return order;
+}
+
+module.exports = {
+    getLocaleObject: getLocaleObject,
+    calculatePaymentTransactionTotals: calculatePaymentTransactionTotals,
+    createOrder: createOrder
+};
