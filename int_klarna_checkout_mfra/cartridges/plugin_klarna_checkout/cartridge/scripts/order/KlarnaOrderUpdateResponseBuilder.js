@@ -98,9 +98,10 @@
     	return this;
     }
 
-    OrderUpdateResponseBuilder.prototype.buildTotalAmount = function (basket, showShippingOptions) {
-        //var orderAmount = COHelpers.calculateNonGiftCertificateAmount(basket).value*100;
-    	var orderAmount = basket.totalGrossPrice.value*100;
+    OrderUpdateResponseBuilder.prototype.buildTotalAmount = function (basket) {
+        var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+
+        var orderAmount = KlarnaHelpers.calculateNonGiftCertificateAmount(basket).value*100;
 
     	this.context.order_amount = Math.round(orderAmount);
 
@@ -133,12 +134,12 @@
     };
 
     OrderUpdateResponseBuilder.prototype.buildShippingMethods = function (basket) {
-    	var currentShippingMethod, shippingMethodPrice;
+        var shippingHelpers = require('*/cartridge/scripts/checkout/shippingHelpers');
     	var shipment = basket.defaultShipment;
-        var applicableShippingMethods = getApplicableShippingMethods(shipment);
+        var applicableShippingMethods = shippingHelpers.getApplicableShippingMethods(shipment);
 
         if (!empty(applicableShippingMethods) && applicableShippingMethods.length > 0) {
-        	currentShippingMethod = basket.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
+        	var currentShippingMethod = basket.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 
             // Transaction controls are for fine tuning the performance of the data base interactions when calculating shipping methods
             Transaction.begin();
@@ -151,17 +152,17 @@
 
         		shipment.setShippingMethod(shippingMethod);
         		calculateBasket(basket);
-        		shippingMethodPrice = (basket.adjustedShippingTotalPrice.value)*100;
+        		var shippingMethodPrice = (basket.adjustedShippingTotalPrice.value) * 100;
 
         		var shippingOption = new ShippingOption();
         		shippingOption.id = shippingMethod.ID;
-        		shippingOption.name = shippingMethod.displayName.replace(/[^\x00-\x7F]/g, "");
+        		shippingOption.name = shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '');
         		shippingOption.description = shippingMethod.description;
         		shippingOption.price = Math.round(shippingMethodPrice);
         		shippingOption.tax_rate = 0;
         		shippingOption.preselected = (shippingMethod.ID === currentShippingMethod.ID);
-        		
-        		this.context.shipping_options.push(shippingOption);
+
+    			this.context.shipping_options.push(shippingOption);
         	}
 
         	Transaction.rollback();
@@ -170,7 +171,7 @@
     	    	shipment.setShippingMethod(currentShippingMethod);
     	    	calculateBasket(basket);
     	    });
-		}
+        }
 
         return this;
     };
@@ -368,28 +369,6 @@
     	};
     }
 
-    function getApplicableShippingMethods(shipment) {
-    	var address = shipment.shippingAddress;
-
-    	var addressObj = new Object();
-    	addressObj.address1 = address.address1;
-    	addressObj.address2 = address.address2;
-    	addressObj.countryCode = address.countryCode.value;
-    	addressObj.stateCode = address.stateCode;
-    	addressObj.postalCode = address.postalCode;
-    	addressObj.city = address.city;
-
-        if (!addressObj.countryCode) {
-        	addressObj.countryCode = 'US';
-        }
-
-        if (!addressObj.stateCode) {
-        	addressObj.stateCode = 'NY';
-        }
-        // Retrieve the list of applicable shipping methods for the given shipment and address.
-        return ShippingMgr.getShipmentShippingModel(shipment).getApplicableShippingMethods(addressObj).toArray();
-    }
-    
     function calculateBasket(basket) {
         dw.system.HookMgr.callHook('dw.order.calculate', 'calculate', basket);
     }

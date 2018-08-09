@@ -2,11 +2,11 @@
 	"hooks": [
         {
             "name": "app.payment.processor.basic_gift_certificate",
-            "script": "./payment/processor/basic_gift_certificate"
+            "script": "./hooks/payment/processor/basic_gift_certificate"
         },
 		{
-			"name": "app.payment.processor.klarna_checkout",
-			"script": "./payment/processor/klarna_checkout"
+			"name": "app.payment.processor.KLARNA_CHECKOUT",
+			"script": "./hooks/payment/processor/klarna_checkout"
 		},
 		{
 			"name": "extra.merchant.data",

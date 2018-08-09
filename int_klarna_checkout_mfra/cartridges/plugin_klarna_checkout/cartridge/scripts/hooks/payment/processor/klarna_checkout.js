@@ -4,47 +4,44 @@
 var Transaction = require('dw/system/Transaction');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 var PaymentMgr = require('dw/order/PaymentMgr');
-var StringUtils = require('dw/util/StringUtils');
 var Logger = require('dw/system/Logger');
 var Site = require('dw/system/Site');
 
 /* Script Modules */
-var KlarnaHttpService = require('~/cartridge/scripts/services/klarnaHttpService');
-var KlarnaApiContext = require('~/cartridge/scripts/services/klarnaApiContext');
-var KlarnaCheckoutController = require('~/cartridge/controllers/KlarnaCheckout');
-var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
+var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 
 /**
  * Create the Klarna Checkout payment instrument.
  */
 function Handle(args) {
+	var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
 	var basket = args.Basket;
+	var paymentInstrs = [];
+	var iter = {};
+	var existingPI = {};
 	var amount = 0;
-	//var paymentInstrs = [];
-	//var iter = {};
-	//var existingPI = {};
-
-    if (basket === null) {
-        return { error: true };
-    }
-
-    /*paymentInstrs = basket.getPaymentInstruments();
-	iter = paymentInstrs.iterator();
-	existingPI = null;
-
-	// remove all PI except gift certificates
-	while( iter.hasNext() )
-	{
-		existingPI = iter.next();
-		if (!PaymentInstrument.METHOD_GIFT_CERTIFICATE.equals(existingPI.paymentMethod)) {
-			args.Basket.removePaymentInstrument(existingPI);
-		}		
-	}*/
+	
 
 	Transaction.wrap(function () {
-		//amount = COHelpers.calculateNonGiftCertificateAmount(basket);
-        //basket.createPaymentInstrument('KLARNA_CHECKOUT', amount);
-        basket.createPaymentInstrument('KLARNA_CHECKOUT', basket.totalGrossPrice);
+		if (basket === null) {
+			return { error: true };
+		}
+
+		paymentInstrs = basket.getPaymentInstruments();
+		iter = paymentInstrs.iterator();
+		existingPI = null;
+
+		// remove all PI except gift certificates
+		while( iter.hasNext() )
+		{
+			existingPI = iter.next();
+			if (!PaymentInstrument.METHOD_GIFT_CERTIFICATE.equals(existingPI.paymentMethod)) {
+				args.Basket.removePaymentInstrument(existingPI);
+			}		
+		}
+		
+		amount = KlarnaHelpers.calculateNonGiftCertificateAmount(basket);
+        basket.createPaymentInstrument('KLARNA_CHECKOUT', amount);
 	});
 
 	return {
@@ -61,16 +58,18 @@ function Authorize(args) {
     var klarnaOrderID = klarnaOrderObj.order_id;
     var localeObject = args.LocaleObject;
     var isPendingOrder = args.isPendingOrder;
-    var paymentInstrument = args.PaymentInstrument;
-    var paymentProcessor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
+	var paymentInstrument = args.PaymentInstrument;
+	var paymentProcessor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
 
     Transaction.wrap(function () {
         paymentInstrument.paymentTransaction.transactionID = klarnaOrderID;
         paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
     });
 
+	var klarnaOrderService = new KlarnaOrderService();
+
     if (!klarnaOrderObj.fraud_status) {
-    	klarnaOrderObj = KlarnaCheckoutController.GetKlarnaOrder(klarnaOrderID, localeObject, true);
+    	klarnaOrderObj = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
     	if (!klarnaOrderObj) {
     		return {error: true};
     	}
@@ -97,7 +96,14 @@ function Authorize(args) {
     var vcnEnabled = Site.getCurrent().getCustomPreferenceValue('kcVCNEnabled');
 
     if (paymentMode === 'DIRECT_CAPTURE' && order.paymentStatus.value === dw.order.Order.PAYMENT_STATUS_NOTPAID && !vcnEnabled) {
-    	captureOrder(klarnaOrderID, localeObject, order, paymentInstrument);
+		var amount = paymentInstrument.paymentTransaction.amount;
+		var isSuccessful = klarnaOrderService.captureOrder(klarnaOrderID, localeObject, amount);
+		if (isSuccessful) {
+			Transaction.wrap(function () {
+				paymentInstrument.paymentTransaction.type = dw.order.PaymentTransaction.TYPE_CAPTURE;
+				order.paymentStatus = dw.order.Order.PAYMENT_STATUS_PAID;
+			});
+		}
     } else {
     	Transaction.wrap(function () {
     		paymentInstrument.paymentTransaction.type = dw.order.PaymentTransaction.TYPE_AUTH;
@@ -131,7 +137,7 @@ function Authorize(args) {
  * @return {Object} fraud status result
  */
 function handleFraudStatus(klarnaFraudStatus, isPendingOrder) {
-	var FRAUD_STATUS = require('int_klarna_checkout/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
+	var FRAUD_STATUS = require('~/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
 	var orderFraudStatus = null;
 	isPendingOrder = (isPendingOrder === true);
 
@@ -175,41 +181,8 @@ function handleFraudStatus(klarnaFraudStatus, isPendingOrder) {
 		};
 	}
 
-	Logger.error('Unknown Klarna Fraud Status');
+	Logger.getLogger('Klarna').error('Unknown Klarna Fraud Status');
     return orderFraudStatus;
-}
-
-/**
- * API call to fully capture Klarna order
- *
- * @param  {String} klarnaOrderID
- * @param  {dw.object.CustomObject} localeObject
- * @param  {dw.order.Order} order
- * @param  {dw.order.PaymentInstrument} paymentInstrument
- * @return {void}
- */
-function captureOrder(klarnaOrderID, localeObject, order, paymentInstrument) {
-	var klarnaHttpService = new KlarnaHttpService();
-    var klarnaApiContext = new KlarnaApiContext();
-    var requestUrl = dw.util.StringUtils.format(klarnaApiContext.getFlowApiUrls().get('captureOrder'), klarnaOrderID);
-    var capturedAmount = paymentInstrument.paymentTransaction.amount;
-	var responce;
-	var requestBody = new Object();
-
-	requestBody['captured_amount'] = Math.round(capturedAmount.value*100);
-
-	try {
-		response = klarnaHttpService.call(requestUrl, 'POST', localeObject.custom.credentialID, requestBody);
-
-	} catch (e) {
-		Logger.error(e);
-		return;
-	}
-
-	Transaction.wrap(function () {
-		paymentInstrument.paymentTransaction.type = dw.order.PaymentTransaction.TYPE_CAPTURE;
-		order.paymentStatus = dw.order.Order.PAYMENT_STATUS_PAID;
-	});
 }
 
 /**
@@ -232,7 +205,7 @@ function createVCNSettlement(order, klarnaOrderID, localeObject) {
 		response = klarnaHttpService.call(requestUrl, 'POST', localeObject.custom.credentialID, requestBody);	
 
 	} catch (e) {
-		logger.error(e);
+		Logger.getLogger('Klarna').error(e);
 		return {error: true};
 	}
 
@@ -266,10 +239,10 @@ function createVCNSettlement(order, klarnaOrderID, localeObject) {
 		});
 
 	} catch (e) {
-		Logger.error(e);
+		Logger.getLogger('Klarna').error(e);
 		return {error: true};
 	}
-    
+
 	return {success: true};
 }
 

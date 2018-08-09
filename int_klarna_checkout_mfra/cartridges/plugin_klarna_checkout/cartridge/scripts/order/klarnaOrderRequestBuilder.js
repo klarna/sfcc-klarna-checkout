@@ -15,6 +15,7 @@
     var Site = require('dw/system/Site');
     var HookMgr = require('dw/system/HookMgr');
     var ArrayList = require('dw/util/ArrayList');
+    var OrderMgr = require('dw/order/OrderMgr');
 
     function KlarnaOrderRequestBuilder() {
         this.context = null;
@@ -39,7 +40,8 @@
         var localeObject = params.localeObject.custom;
 
         var requestBodyObject = this.init()
-        	.setCustomerReference(basket)
+            .buildCustomerReference(basket)
+            .buildOrderReferences()
         	.buildLocale(basket, localeObject)
             .buildBilling(basket, localeObject)
             .buildOptions(localeObject)
@@ -53,7 +55,7 @@
             .buildMerchantInformation(basket, localeObject);
 
         if (localeObject.showShippingOptions === true) {
-    		this.buildShippingMethods(basket, localeObject);
+    		this.buildShippingMethods(basket);
         }
 
         if (Site.getCurrent().getCustomPreferenceValue('kcAllowSeparateShippingAddress') && localeObject.showShippingCountries === true) {
@@ -68,7 +70,13 @@
         return this;
     };
 
-    KlarnaOrderRequestBuilder.prototype.setCustomerReference = function (basket) {
+    KlarnaOrderRequestBuilder.prototype.buildOrderReferences = function () {
+    	this.context.merchant_reference1 = OrderMgr.createOrderSequenceNo();
+
+        return this;
+    };
+
+    KlarnaOrderRequestBuilder.prototype.buildCustomerReference = function (basket) {
     	var currentCustomer = basket.getCustomer();
 
     	if (empty(currentCustomer) || empty(currentCustomer.profile)) {
@@ -131,13 +139,13 @@
     	var country = localeObject.country;
 
     	this.context.merchant_urls.terms = Site.getCurrent().getCustomPreferenceValue('kcTermsAndConditionsUrl');
-    	this.context.merchant_urls.checkout = URLUtils.https('KlarnaCheckout-Begin').toString();
-    	this.context.merchant_urls.confirmation = URLUtils.https('KlarnaCheckout-Confirmation', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
-    	this.context.merchant_urls.push = URLUtils.https('KlarnaCheckout-Push', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
-    	this.context.merchant_urls.validation = URLUtils.https('KlarnaCheckout-Validation').toString();
-        this.context.merchant_urls.shipping_option_update = URLUtils.https('KlarnaCheckout-Update').toString();
-    	this.context.merchant_urls.address_update = URLUtils.https('KlarnaCheckout-Update').toString();
-    	this.context.merchant_urls.notification = URLUtils.https('KlarnaCheckout-Notification', 'klarna_country', country).toString();
+    	this.context.merchant_urls.checkout = URLUtils.https('Checkout-Begin').toString();
+    	this.context.merchant_urls.confirmation = URLUtils.https('Order-Confirm', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
+    	this.context.merchant_urls.push = URLUtils.https('KlarnaCheckoutServices-Push', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
+    	this.context.merchant_urls.validation = URLUtils.https('KlarnaCheckoutServices-Validation').toString();
+        this.context.merchant_urls.shipping_option_update = URLUtils.https('KlarnaCheckoutServices-Update').toString();
+    	this.context.merchant_urls.address_update = URLUtils.https('KlarnaCheckoutServices-Update').toString();
+    	this.context.merchant_urls.notification = URLUtils.https('KlarnaCheckoutServices-Notification', 'klarna_country', country).toString();
 
         return this;
     };
@@ -210,9 +218,10 @@
     };
 
     KlarnaOrderRequestBuilder.prototype.buildTotalAmount = function (basket, localeObject) {
-    	var country = localeObject.country;
-        // var orderAmount = COHelpers.calculateNonGiftCertificateAmount(basket).value*100;
-        var orderAmount = basket.totalGrossPrice.value * 100;
+        var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+        var country = localeObject.country;
+
+        var orderAmount = KlarnaHelpers.calculateNonGiftCertificateAmount(basket).value*100;
 
     	this.context.order_amount = Math.round(orderAmount);
 
@@ -258,15 +267,13 @@
         return this;
     };
 
-    KlarnaOrderRequestBuilder.prototype.buildShippingMethods = function (basket, localeObject) {
-    	var currentShippingMethod, 
-shippingMethodPrice;
-    	var country = localeObject.country;
+    KlarnaOrderRequestBuilder.prototype.buildShippingMethods = function (basket) {
+        var shippingHelpers = require('*/cartridge/scripts/checkout/shippingHelpers');
     	var shipment = basket.defaultShipment;
-        var applicableShippingMethods = getApplicableShippingMethods(shipment);
+        var applicableShippingMethods = shippingHelpers.getApplicableShippingMethods(shipment);
 
         if (!empty(applicableShippingMethods) && applicableShippingMethods.length > 0) {
-        	currentShippingMethod = basket.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
+        	var currentShippingMethod = basket.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 
             // Transaction controls are for fine tuning the performance of the data base interactions when calculating shipping methods
             Transaction.begin();
@@ -279,7 +286,7 @@ shippingMethodPrice;
 
         		shipment.setShippingMethod(shippingMethod);
         		calculateBasket(basket);
-        		shippingMethodPrice = (basket.adjustedShippingTotalPrice.value) * 100;
+        		var shippingMethodPrice = (basket.adjustedShippingTotalPrice.value) * 100;
 
         		var shippingOption = new ShippingOption();
         		shippingOption.id = shippingMethod.ID;
@@ -535,29 +542,6 @@ categoryPath;
         this.context.billing_address.city = address.city || '';
         this.context.billing_address.region = address.stateCode || '';
         this.context.billing_address.country = address.countryCode.value || '';
-    }
-
-    function getApplicableShippingMethods(shipment) {
-    	var address = shipment.shippingAddress;
-
-    	var addressObj = new Object();
-    	addressObj.address1 = address.address1;
-    	addressObj.address2 = address.address2;
-    	addressObj.countryCode = address.countryCode.value;
-    	addressObj.stateCode = address.stateCode;
-    	addressObj.postalCode = address.postalCode;
-    	addressObj.city = address.city;
-
-        if (!addressObj.countryCode) {
-        	addressObj.countryCode = 'US';
-        }
-
-        if (!addressObj.stateCode) {
-        	addressObj.stateCode = 'NY';
-        }
-
-        // Retrieve the list of applicable shipping methods for the given shipment and address.
-        return ShippingMgr.getShipmentShippingModel(shipment).getApplicableShippingMethods(addressObj).toArray();
     }
 
     function calculateBasket(basket) {

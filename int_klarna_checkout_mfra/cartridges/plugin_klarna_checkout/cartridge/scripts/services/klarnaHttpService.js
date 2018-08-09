@@ -35,7 +35,7 @@ var klarnaService = LocalServiceRegistry.createService(Site.getCurrent().getCust
 
 
 function KlarnaHttpService() {
-    this._logger = Logger.getLogger('RequestTrace'),
+    this._logger = Logger.getLogger('Klarna'),
 
     this.call = function (urlPath, httpVerb, credentialID, requestBody) {
         var requestObject = {};

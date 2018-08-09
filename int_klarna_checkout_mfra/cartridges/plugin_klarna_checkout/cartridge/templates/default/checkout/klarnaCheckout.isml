@@ -9,9 +9,11 @@
         assets.addJs('/js/klarna-checkout.js');
     </isscript>
 
+    <iscomment>
 	<isif condition="${pdict.reportingURLs && pdict.reportingURLs.length}">
         <isinclude template="reporting/reportingUrls" />
     </isif>
+    </iscomment>
 
     <h1 class="page-title">
         ${Resource.msg('title.checkout','checkout',null)}
@@ -21,10 +23,9 @@
     </h1>
 
     <div id="checkout-main" class="container data-checkout-stage"
-         data-update-klarna="${URLUtils.https('KlarnaCheckout-UpdateKlarnaCheckout').toString()}"
-         data-update-summary="${URLUtils.https('KlarnaCheckout-UpdateSummary').toString()}"
-         data-select-shipping="${URLUtils.https('KlarnaCheckout-SelectShippingMethod').toString()}"
-         data-update-address="${URLUtils.https('KlarnaCheckout-UpdateShippingAddress').toString()}">
+         data-update-klarna="${URLUtils.https('KlarnaCheckoutServices-UpdateCheckout').toString()}"
+         data-select-shipping="${URLUtils.https('KlarnaCheckoutShippingServices-SelectShippingMethod').toString()}"
+         data-update-address="${URLUtils.https('KlarnaCheckoutShippingServices-UpdateShippingAddress').toString()}">
 
         <div class="row">
             <div class="col-sm-7">
@@ -48,8 +49,11 @@
                 </isif>
 
                 <isif condition="${pdict.LocaleObject.custom.showShippingOptions !== true && !pdict.PlaceOrderError}" >
-	                <div id="shipping-method-list">
-                		<isinclude template="checkout/shipping/shippingMethod" />
+	                <div id="shipping-method-list" 
+                        data-update-shippingmethods="${URLUtils.https('CheckoutShippingServices-UpdateShippingMethodList').toString()}">
+
+                        <isset name="shippingModel" value="${pdict.order.shipping[0]}" scope="page" />
+                		<isinclude template="checkout/klarnaShippingMethod" />
 	                </div>
                 </isif>
 

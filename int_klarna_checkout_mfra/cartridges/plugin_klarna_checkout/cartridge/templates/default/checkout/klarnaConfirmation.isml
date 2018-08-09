@@ -11,8 +11,8 @@
 	<div class="confirmation col-sm-6 offset-sm-3">
 		<div class="confirmation-message">
 
-			<isif condition="${!empty(pdict.ConfirmationSnippet)}">
-				<input id="klarnaConfirmationSnippet" type="hidden" value="${pdict.ConfirmationSnippet}" />
+			<isif condition="${!empty(pdict.confirmationSnippet)}">
+				<input id="klarnaConfirmationSnippet" type="hidden" value="${pdict.confirmationSnippet}" />
 				<div id="klarna-checkout"></div>
 				<script>
 					var klarnaCheckoutCont = document.getElementById('klarna-checkout');
