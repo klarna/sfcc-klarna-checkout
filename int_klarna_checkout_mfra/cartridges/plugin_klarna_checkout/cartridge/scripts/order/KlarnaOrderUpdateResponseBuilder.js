@@ -134,29 +134,25 @@
     };
 
     OrderUpdateResponseBuilder.prototype.buildShippingMethods = function (basket) {
-        var shippingHelpers = require('*/cartridge/scripts/checkout/shippingHelpers');
+        var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
     	var shipment = basket.defaultShipment;
-        var applicableShippingMethods = shippingHelpers.getApplicableShippingMethods(shipment);
+        var applicableShippingMethods = ShippingHelper.getApplicableShippingMethods(shipment);
 
-        if (!empty(applicableShippingMethods) && applicableShippingMethods.length > 0) {
+        if (applicableShippingMethods.length > 0) {
         	var currentShippingMethod = basket.getDefaultShipment().getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 
-            // Transaction controls are for fine tuning the performance of the data base interactions when calculating shipping methods
             Transaction.begin();
+
         	for (var i = 0; i < applicableShippingMethods.length; i++) {
         		var shippingMethod = applicableShippingMethods[i];
 
-        		if (shippingMethod.custom.storePickupEnabled) {
-        			continue;
-        		}
-
-        		shipment.setShippingMethod(shippingMethod);
+        		ShippingHelper.selectShippingMethod(shipment, shippingMethod.ID);
         		calculateBasket(basket);
         		var shippingMethodPrice = (basket.adjustedShippingTotalPrice.value) * 100;
 
         		var shippingOption = new ShippingOption();
         		shippingOption.id = shippingMethod.ID;
-        		shippingOption.name = shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '');
+        		shippingOption.name = shippingMethod.displayName ? shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '') : null;
         		shippingOption.description = shippingMethod.description;
         		shippingOption.price = Math.round(shippingMethodPrice);
         		shippingOption.tax_rate = 0;

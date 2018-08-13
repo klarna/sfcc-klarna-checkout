@@ -8,7 +8,7 @@ var Transaction = require('dw/system/Transaction');
 var Locale = require('dw/util/Locale');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 var PaymentMgr = require('dw/order/PaymentMgr');
-var HashMap = require('dw/util/HashMap');
+var ShippingMgr = require('dw/order/ShippingMgr');
 
 /* Script Modules */
 var OrderModel = require('*/cartridge/models/order');
@@ -87,7 +87,7 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
         var countryCode = req.querystring.country.toLowerCase();
         // Klarna JS API returns ISO3 country codes in this case, so we use map to get ISO2 country codes.
         if (countryCode && countryCode.length === 3) {
-            var countryCodesMap = require('~/cartridge/countryCodesMap');
+            var countryCodesMap = require('~/cartridge/config/countryCodesMap');
             countryCode = countryCodesMap[countryCode];
         }
 
@@ -95,14 +95,14 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
             shippingAddress = shipment.createShippingAddress();
         }
 
-        shippingAddress.setFirstName(req.querystring.given_name);
-        shippingAddress.setLastName(req.querystring.family_name);
-        shippingAddress.setAddress1(req.querystring.street_address);
-        shippingAddress.setAddress2(req.querystring.street_address2);
-        shippingAddress.setCity(req.querystring.city);
-        shippingAddress.setPostalCode(req.querystring.postal_code);
-        shippingAddress.setStateCode(req.querystring.region);
-        shippingAddress.setCountryCode(countryCode);
+        shippingAddress.setFirstName(req.querystring.given_name || '');
+        shippingAddress.setLastName(req.querystring.family_name || '');
+        shippingAddress.setAddress1(req.querystring.street_address || '');
+        shippingAddress.setAddress2(req.querystring.street_address2 || '');
+        shippingAddress.setCity(req.querystring.city || '');
+        shippingAddress.setPostalCode(req.querystring.postal_code || '');
+        shippingAddress.setStateCode(req.querystring.region || '');
+        shippingAddress.setCountryCode(countryCode || '');
 
         COHelpers.recalculateBasket(currentBasket);
 
@@ -137,12 +137,12 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
             success: true,
             order: basketModel,
             address: {
-                address1: shippingAddress.address1,
-                address2: shippingAddress.address2,
-                city: shippingAddress.city,
-                countryCode: shippingAddress.countryCode.value,
-                stateCode: shippingAddress.stateCode,
-                postalCode: shippingAddress.postalCode
+                address1: shippingAddress.address1 || '',
+                address2: shippingAddress.address2 || '',
+                city: shippingAddress.city || '',
+                countryCode: shippingAddress.countryCode.value || '',
+                stateCode: shippingAddress.stateCode || '',
+                postalCode: shippingAddress.postalCode || ''
             }
         });
     }
@@ -172,16 +172,20 @@ server.get('UpdateShippingMethodList', server.middleware.https, function (req, r
     }
 
     var address = new Object();
-    address.countryCode = req.httpParameterMap.countryCode.stringValue;
-    address.stateCode = req.httpParameterMap.stateCode.stringValue;
-    address.postalCode = req.httpParameterMap.postalCode.stringValue;
-    address.city = req.httpParameterMap.city.stringValue;
-    address.address1 = req.httpParameterMap.address1.stringValue;
-    address.address2 = req.httpParameterMap.address2.stringValue;
+    address.countryCode = req.querystring.countryCode;
+    address.stateCode = req.querystring.stateCode;
+    address.postalCode = req.querystring.postalCode;
+    address.city = req.querystring.city;
+    address.address1 = req.querystring.address1;
+    address.address2 = req.querystring.address2;
+
+    if (!address.countryCode) {
+        var currentLocale = Locale.getLocale(req.locale.id);
+        address.countryCode = currentLocale.country;
+    }
 
     var shipment = currentBasket.getDefaultShipment();
-    var applicableShippingMethods = ShippingHelper.getApplicableShippingMethods(address);
-    var shippingCosts = new HashMap();
+    var applicableShippingMethods = ShippingHelper.getApplicableShippingMethods(shipment, address);
     var currentShippingMethod = shipment.getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 
     Transaction.begin();
@@ -189,22 +193,50 @@ server.get('UpdateShippingMethodList', server.middleware.https, function (req, r
     for (var i = 0; i < applicableShippingMethods.length; i++) {
         var method = applicableShippingMethods[i];
 
-        ShippingHelper.selectShippingMethod(shipment, method.getID(), method, applicableShippingMethods);
+        ShippingHelper.selectShippingMethod(shipment, method.ID, null, address);
         COHelpers.recalculateBasket(currentBasket);
-        shippingCosts.put(method.getID(), currentBasket.getAdjustedShippingTotalPrice());
+        method.shippingCost = currentBasket.getAdjustedShippingTotalPrice();
     }
 
     Transaction.rollback();
 
     Transaction.wrap(function () {
-        ShippingHelper.selectShippingMethod(shipment, currentShippingMethod.getID(), applicableShippingMethods);
+        ShippingHelper.selectShippingMethod(shipment, currentShippingMethod.getID(), null, address);
         COHelpers.recalculateBasket(currentBasket);
     });
 
-    res.render('checkout/klarnaShippingMethods', {
-        basket: currentBasket,
-        applicableShippingMethods: applicableShippingMethods,
-        shippingCosts: shippingCosts
+    var responseObject = { applicableShippingMethods: applicableShippingMethods };
+
+    if (req.querystring.format !== 'ajax') {
+        res.render('checkout/klarnaShippingMethods', responseObject);
+        return next();
+    }
+
+    var Template = require('dw/util/Template');
+    var HashMap = require('dw/util/HashMap');
+
+    var context = new HashMap();
+    Object.keys(responseObject).forEach(function (key) {
+        context.put(key, responseObject[key]);
+    });
+
+    var template = new Template('checkout/klarnaShippingMethods');
+    var shippingMethodsHtml = template.render(context).text;
+
+    var basketModel = new OrderModel(
+        currentBasket,
+        {
+            customer: req.currentCustomer.raw,
+            usingMultiShipping: req.session.privacyCache.get('usingMultiShipping'),
+            countryCode: Locale.getLocale(req.locale.id).country,
+            containerView: 'basket'
+        }
+    );
+
+    res.json({
+        success: true,
+        shippingMethodsHtml: shippingMethodsHtml,
+        order: basketModel
     });
 
     return next();

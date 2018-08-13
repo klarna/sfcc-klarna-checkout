@@ -195,21 +195,13 @@ function handleFraudStatus(klarnaFraudStatus, isPendingOrder) {
 */
 function createVCNSettlement(order, klarnaOrderID, localeObject) {
 	var Cypher = require('dw/crypto/Cipher');
-	var klarnaHttpService = new KlarnaHttpService();
-    var klarnaApiContext = new KlarnaApiContext();
-    var requestBody = {'order_id' : klarnaOrderID};
-    var requestUrl = klarnaApiContext.getFlowApiUrls().get('vcnSettlement');
-    var response;
+	var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 
-	try {
-		response = klarnaHttpService.call(requestUrl, 'POST', localeObject.custom.credentialID, requestBody);	
+	var klarnaOrderService = new KlarnaOrderService();
 
-	} catch (e) {
-		Logger.getLogger('Klarna').error(e);
-		return {error: true};
-	}
+    var response = klarnaOrderService.createVCNSettlement(klarnaOrderID, localeObject)
 
-	if (!response.settlement_id) {
+	if (!response || !response.settlement_id) {
 		return {error: true};	
 	}
 

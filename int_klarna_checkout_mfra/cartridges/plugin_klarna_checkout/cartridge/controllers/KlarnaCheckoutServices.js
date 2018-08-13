@@ -5,6 +5,7 @@ var server = require('server');
 var BasketMgr = require('dw/order/BasketMgr');
 var URLUtils = require('dw/web/URLUtils');
 var Transaction = require('dw/system/Transaction');
+var Logger = require('dw/system/Logger');
 
 /* Script Modules */
 var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
@@ -74,7 +75,7 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
 
     if (!currentBasket) {
         res.redirect(URLUtils.https('Cart-Show'));
-        return next();
+        return;
     }
 
     var localeObject = KlarnaHelpers.getLocaleObject(null, req.locale.id);
@@ -110,7 +111,7 @@ server.post('Push', server.middleware.https, function (req, res, next) {
 
     if (!klarnaOrderID || !klarnaCountry) {
         res.setStatusCode(200);
-    next();
+        return;
     }
 
     var localeObject = KlarnaHelpers.getLocaleObject(klarnaCountry);
@@ -128,7 +129,6 @@ server.post('Push', server.middleware.https, function (req, res, next) {
     }
 
     res.setStatusCode(200);
-    next();
 });
 
 
@@ -139,7 +139,8 @@ server.post('Notification', server.middleware.https, function (req, res, next) {
     var klarnaFraudDecisionObject = JSON.parse(req.body);
     var klarnaOrderID = klarnaFraudDecisionObject.order_id;
     var klarnaCountry = req.querystring.klarna_country;
-    var localeId = req.locale.id;
+
+    Logger.getLogger('Klarna').info('Received notification for Klarna order with ID: {0}.', klarnaOrderID);
 
     var localeObject = KlarnaHelpers.getLocaleObject(klarnaCountry);
     var klarnaOrderService = new KlarnaOrderService();
@@ -150,12 +151,11 @@ server.post('Notification', server.middleware.https, function (req, res, next) {
             klarnaOrderObject: klarnaOrderObject,
             localeObject: localeObject,
             isPendingOrder: true,
-            localeId: localeId
+            localeId: req.locale.id
         });
     }
 
     res.setStatusCode(200);
-    next();
 });
 
 module.exports = server.exports();

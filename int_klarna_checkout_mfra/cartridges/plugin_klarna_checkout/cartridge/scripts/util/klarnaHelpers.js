@@ -111,7 +111,6 @@ function calculatePaymentTransactionTotals(basket) {
  * @return {Object} JSON object that is empty, contains error information, or PlaceOrderError status information.
  */
 function placeOrder(context) {
-    var Resource = require('dw/web/Resource');
 	var klarnaOrderObj = context.klarnaOrderObject;
 	var localeObject = context.localeObject;
     var isPendingOrder = context.isPendingOrder;
@@ -124,7 +123,7 @@ function placeOrder(context) {
 		if (!order) {
 			return {
 				error: true,
-				errorMessage: Resource.msg('error.technical', 'checkout', null)
+				errorKey: 'error.technical'
 		    };
 		}
 	}
@@ -146,7 +145,7 @@ function placeOrder(context) {
             session.custom.klarnaOrderID = null;
             return {
                 error: true,
-                errorMessage: Resource.msg('error.technical', 'checkout', null)
+                errorKey: 'error.technical' 
             };
         });
 
@@ -156,7 +155,7 @@ function placeOrder(context) {
             session.custom.klarnaOrderID = null;
             return {
                 error: true,
-                errorMessage: Resource.msg('error.technical', 'checkout', null)
+                errorKey: 'error.technical'
             };
         });
 
@@ -166,7 +165,7 @@ function placeOrder(context) {
 			session.custom.klarnaOrderID = null;
 			return {
 				error: true,
-				errorMessage: Resource.msg('klarna.checkout.declined', 'klarna', null) 
+				errorKey:'klarna.checkout.declined'
 			};
 		});    
 
@@ -183,7 +182,7 @@ function placeOrder(context) {
     if (placeOrderResult.error) {
         return {
             error: true,
-            errorMessage: Resource.msg('error.technical', 'checkout', null)
+            errorKey: 'error.technical'
         };
     }
 

@@ -137,6 +137,29 @@ function KlarnaOrderService() {
      *
      * @param  {string} klarnaOrderID
      * @param  {dw.object.CustomObject} localeObject
+     * @return {Object} the settlement
+    */
+    this.createVCNSettlement = function (klarnaOrderID, localeObject) {
+        var requestUrl = this._klarnaApiContext.getFlowApiUrls().get('vcnSettlement');
+        var requestBody = {'order_id' : klarnaOrderID};
+        var response;
+
+        try {
+            response = this._klarnaHttpService.call(requestUrl, 'POST', localeObject.custom.credentialID, requestBody);
+
+        } catch (e) {
+            this._logger.error(e);
+            return null;
+        }
+
+        return response;
+    }
+
+    /**
+     * API call to update Klarna Order Merchant References
+     *
+     * @param  {string} klarnaOrderID
+     * @param  {dw.object.CustomObject} localeObject
      * @param  {string} value
      * @return {boolean} true if successful, false otherwise
     */

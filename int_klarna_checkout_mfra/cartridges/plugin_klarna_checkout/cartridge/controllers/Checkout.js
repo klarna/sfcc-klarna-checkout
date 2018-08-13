@@ -10,6 +10,7 @@ var URLUtils = require('dw/web/URLUtils');
 var Transaction = require('dw/system/Transaction');
 var HookMgr = require('dw/system/HookMgr');
 var BasketMgr = require('dw/order/BasketMgr');
+var Resource = require('dw/web/Resource');
 
 /* Script Modules */
 var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
@@ -74,12 +75,18 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
 
     if (req.session.privacyCache.get('usingMultiShipping') && currentBasket.shipments.length > 1) {
         res.render('checkout/klarnaCheckout', {
-            KlarnaError: 'klarna.checkout.multishipError'
+            klarnaError: Resource.msg('klarna.checkout.multishipError', 'checkout', null)
         });
         return next();
     }
 
     var localeObject = KlarnaHelpers.getLocaleObject(null, req.locale.id);
+    if (!localeObject) {
+        res.render('checkout/klarnaCheckout', {
+            klarnaError: Resource.msg('klarna.checkout.notsupportedcountry', 'checkout', null)
+        });
+        return next();
+    }
 
     // Loop through all shipments and make sure all are valid
     var allValid = COHelpers.ensureValidShipments(currentBasket);
@@ -131,11 +138,11 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
             title: 'Klarna Checkout'
         },
         order: basketModel,
-        KlarnaError: !checkoutSnippet ? 'klarna.checkout.submissionError' : null,
-        CheckoutSnippet: checkoutSnippet,
-        LocaleObject: localeObject,
-        Basket: currentBasket,
-        PlaceOrderError: req.err
+        klarnaError: !checkoutSnippet ? Resource.msg('klarna.checkout.submissionError', 'checkout', null) : null,
+        checkoutSnippet: checkoutSnippet,
+        localeObject: localeObject,
+        basket: currentBasket,
+        placeOrderError: req.querystring.err ? Resource.msg(req.querystring.err, 'checkout', null) : null
     });
 
     return next();

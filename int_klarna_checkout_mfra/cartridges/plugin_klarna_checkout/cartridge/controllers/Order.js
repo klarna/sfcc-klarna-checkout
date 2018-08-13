@@ -58,7 +58,7 @@ server.replace('Confirm', server.middleware.https, function (req, res, next) {
     });
 
     if (placeOrderResult.error) {
-        res.redirect(URLUtils.https('Checkout-Begin', 'err', placeOrderResult.errorMessage).toString());
+        res.redirect(URLUtils.https('Checkout-Begin', 'err', placeOrderResult.errorKey).toString());
     } else {
         var currentBasket = BasketMgr.getCurrentBasket();
 
