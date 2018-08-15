@@ -2,22 +2,16 @@
 
 var server = require('server');
 
-var BasketMgr = require('dw/order/BasketMgr');
-var URLUtils = require('dw/web/URLUtils');
-var Transaction = require('dw/system/Transaction');
-var Logger = require('dw/system/Logger');
-
-/* Script Modules */
-var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
-var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
-
 
 /**
  * Updates the Klarna order when a shipping method or address if the checkout has changed
  * @transactional
  */
 server.post('Update', server.middleware.https, function (req, res, next) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var URLUtils = require('dw/web/URLUtils');
+    var Transaction = require('dw/system/Transaction');
     var KlarnaOrderUpdateResponseBuilder = require('~/cartridge/scripts/order/klarnaOrderUpdateResponseBuilder');
 
     var basket = BasketMgr.getCurrentOrNewBasket();
@@ -49,7 +43,8 @@ server.post('Update', server.middleware.https, function (req, res, next) {
 /**
  * Validate the Klarna order
  */
-server.post('Validation', server.middleware.https, function (req, res, next) {
+server.post('Validation', server.middleware.https, function (req, res) {
+    var URLUtils = require('dw/web/URLUtils');
     var OrderMgr = require('dw/order/OrderMgr');
     var klarnaOrderObject = JSON.parse(req.body);
 
@@ -71,11 +66,15 @@ server.post('Validation', server.middleware.https, function (req, res, next) {
  * Updates Klarna Checkout iFrame
  */
 server.get('UpdateCheckout', server.middleware.https, function (req, res, next) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var URLUtils = require('dw/web/URLUtils');
+    var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
+    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
     var currentBasket = BasketMgr.getCurrentBasket();
 
     if (!currentBasket) {
         res.redirect(URLUtils.https('Cart-Show'));
-        return;
+        return next();
     }
 
     var localeObject = KlarnaHelpers.getLocaleObject(null, req.locale.id);
@@ -104,7 +103,8 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
 /**
  * Verify with Klarna that the order has been created in SFCC
  */
-server.post('Push', server.middleware.https, function (req, res, next) {
+server.post('Push', server.middleware.https, function (req, res) {
+    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
     var klarnaOrderID = req.querystring.klarna_order_id;
     var klarnaCountry = req.querystring.klarna_country;
     var localeId = req.locale.id;
@@ -135,7 +135,9 @@ server.post('Push', server.middleware.https, function (req, res, next) {
 /**
  *  Entry point for notifications on pending orders
  */
-server.post('Notification', server.middleware.https, function (req, res, next) {
+server.post('Notification', server.middleware.https, function (req, res) {
+    var Logger = require('dw/system/Logger');
+    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
     var klarnaFraudDecisionObject = JSON.parse(req.body);
     var klarnaOrderID = klarnaFraudDecisionObject.order_id;
     var klarnaCountry = req.querystring.klarna_country;
