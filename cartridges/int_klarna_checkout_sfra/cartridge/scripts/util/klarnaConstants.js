@@ -1,23 +1,23 @@
 var FRAUD_STATUS = {
-	ACCEPTED : 'ACCEPTED',
-	REJECTED : 'REJECTED',
-	PENDING : 'PENDING',
-	ACCEPTED_AFTER_REVIEW : 'ACCEPTED_AFTER_REVIEW',
-	REJECTED_AFTER_REVIEW : 'REJECTED_AFTER_REVIEW'
-}
+    ACCEPTED: 'ACCEPTED',
+    REJECTED: 'REJECTED',
+    PENDING: 'PENDING',
+    ACCEPTED_AFTER_REVIEW: 'ACCEPTED_AFTER_REVIEW',
+    REJECTED_AFTER_REVIEW: 'REJECTED_AFTER_REVIEW'
+};
 
 var PAYMENT_METHOD = 'KLARNA_CHECKOUT';
 
-var ORDER_LINE_TYPE = 	{
-	DISCOUNT : 'discount',
-	SHIPPING_FEE : 'shipping_fee',
-	SALES_TAX : 'sales_tax',
-	PHYSICAL : 'physical',
-	SURCHARGE : 'surcharge',
-	BONUS_PRODUCT : 'bonus_product',
-	STORE_CREDIT : 'store_credit',
-	GIFT_CARD : 'gift_card'
-}
+var ORDER_LINE_TYPE = {
+    DISCOUNT: 'discount',
+    SHIPPING_FEE: 'shipping_fee',
+    SALES_TAX: 'sales_tax',
+    PHYSICAL: 'physical',
+    SURCHARGE: 'surcharge',
+    BONUS_PRODUCT: 'bonus_product',
+    STORE_CREDIT: 'store_credit',
+    GIFT_CARD: 'gift_card'
+};
 
 // Storefront cartridges names
 var STOREFRONT_CARTRIDGE = 'app_storefront_base';

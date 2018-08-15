@@ -55,6 +55,7 @@ server.replace('Login', server.middleware.get, function (req, res, next) {
  * Begin the Klarna Checkout process
  */
 server.replace('Begin', server.middleware.https, function (req, res, next) {
+    var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
     var currentBasket = BasketMgr.getCurrentBasket();
 
     if (!currentBasket) {
@@ -105,9 +106,9 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
 
     prepareShipping(currentBasket, localeObject);
 
-    HookMgr.callHook('app.payment.processor.KLARNA_CHECKOUT', 'Handle', {
-        Basket: currentBasket
-    });
+    HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD.toLowercase(), 'Handle',
+        currentBasket
+    );
 
     // Calculate the basket
     COHelpers.recalculateBasket(currentBasket);

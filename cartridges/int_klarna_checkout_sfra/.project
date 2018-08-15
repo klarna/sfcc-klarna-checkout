@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>plugin_klarna_checkout</name>
+	<name>int_klarna_checkout_sfra</name>
 	<comment></comment>
 	<projects>
 		<project>DigitalServer</project>
