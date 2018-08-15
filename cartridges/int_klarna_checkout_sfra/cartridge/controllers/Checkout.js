@@ -1,35 +1,22 @@
 'use strict';
 
-var STOREFRONT_CARTRIDGE = require('~/cartridge/scripts/util/klarnaConstants.js').STOREFRONT_CARTRIDGE;
-
-var page = require(STOREFRONT_CARTRIDGE + '/cartridge/controllers/Checkout');
+var page = module.superModule;
 var server = require('server');
 
-/* API Includes */
-var URLUtils = require('dw/web/URLUtils');
-var Transaction = require('dw/system/Transaction');
-var HookMgr = require('dw/system/HookMgr');
-var BasketMgr = require('dw/order/BasketMgr');
-var Resource = require('dw/web/Resource');
-
-/* Script Modules */
-var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
-var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
-var OrderModel = require('*/cartridge/models/order');
-var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
-var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
-
-
 server.extend(page);
+
+var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 
 /**
  * Set the shipping method
  * @transactional
- * @param  {dw.orer.Basket} basket
- * @param  {Object} localeObject
+ * @param  {dw.orer.Basket} basket current basket
+ * @param  {Object} localeObject Klara region specific options
  * @returns {void}
  */
 function prepareShipping(basket, localeObject) {
+    var Transaction = require('dw/system/Transaction');
+    var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
     var shipment = basket.defaultShipment;
 
     Transaction.wrap(function () {
@@ -47,6 +34,7 @@ function prepareShipping(basket, localeObject) {
 }
 
 server.replace('Login', server.middleware.get, function (req, res, next) {
+    var URLUtils = require('dw/web/URLUtils');
     res.redirect(URLUtils.https('Checkout-Begin'));
     next();
 });
@@ -55,6 +43,14 @@ server.replace('Login', server.middleware.get, function (req, res, next) {
  * Begin the Klarna Checkout process
  */
 server.replace('Begin', server.middleware.https, function (req, res, next) {
+    var URLUtils = require('dw/web/URLUtils');
+    var Transaction = require('dw/system/Transaction');
+    var HookMgr = require('dw/system/HookMgr');
+    var BasketMgr = require('dw/order/BasketMgr');
+    var Resource = require('dw/web/Resource');
+    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+    var OrderModel = require('*/cartridge/models/order');
     var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
     var currentBasket = BasketMgr.getCurrentBasket();
 
@@ -89,7 +85,6 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
         return next();
     }
 
-    // Loop through all shipments and make sure all are valid
     var allValid = COHelpers.ensureValidShipments(currentBasket);
 
     var validationBasketStatus = HookMgr.callHook(
@@ -110,7 +105,6 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
         currentBasket
     );
 
-    // Calculate the basket
     COHelpers.recalculateBasket(currentBasket);
 
     var checkoutSnippet;
