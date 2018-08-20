@@ -412,6 +412,7 @@
         var country = localeObject.country;
 
         this.context.merchant_urls.terms = Site.getCurrent().getCustomPreferenceValue('kcTermsAndConditionsUrl');
+        this.context.merchant_urls.cancellation_terms = Site.getCurrent().getCustomPreferenceValue('kcCancellationTermsUrl');
         this.context.merchant_urls.checkout = URLUtils.https('Checkout-Begin').toString();
         this.context.merchant_urls.confirmation = URLUtils.https('Order-Confirm', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
         this.context.merchant_urls.push = URLUtils.https('KlarnaCheckoutServices-Push', 'klarna_country', country, 'klarna_order_id', '{checkout.order.id}').toString();
