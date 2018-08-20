@@ -8,6 +8,9 @@ var Transaction = require('dw/system/Transaction');
 /**
  * Authorizes a payment using a gift certificate. The payment is authorized by redeeming the gift certificate and
  * simply setting the order no as transaction ID.
+ *
+ * @param {Object} args aguments object
+ * @returns {Object} authorization result
  */
 function Authorize(args) {
     var orderNo = args.OrderNo;
@@ -24,10 +27,10 @@ function Authorize(args) {
     Transaction.commit();
 
     if (status.isError()) {
-        return {error: true};
-    } else {
-        return {authorized: true};
+        return { error: true };
     }
+
+    return { authorized: true };
 }
 
 /*

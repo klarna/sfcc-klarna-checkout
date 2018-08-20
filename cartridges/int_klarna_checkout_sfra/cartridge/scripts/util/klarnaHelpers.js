@@ -462,7 +462,7 @@ function setOrderCustomer(order, customerNo) {
  * @transactional
  * @param {Object} klarnaOrderObject Klarna order
  * @param  {dw.object.CustomObject} localeObject Klara region specific options
- * @return  {dw.order.Order} order
+ * @return  {dw.order.Order} order or null
  */
 function createOrder(klarnaOrderObject, localeObject) {
     var currentBasket = BasketMgr.getCurrentOrNewBasket();
@@ -619,9 +619,12 @@ function placeOrder(context) {
     if (!order) {
         order = createOrder(klarnaOrderObj, localeObject);
         if (!order) {
+            var URLUtils = require('dw/web/URLUtils');
+
             return {
                 error: true,
-                errorKey: 'error.technical'
+                errorKey: 'error.technical',
+                redirectURL: URLUtils.https('Cart-Show')
             };
         }
     }

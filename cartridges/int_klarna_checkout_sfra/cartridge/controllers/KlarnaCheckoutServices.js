@@ -54,7 +54,8 @@ server.post('Validation', server.middleware.https, function (req, res) {
         order = KlarnaHelpers.createOrder(klarnaOrderObject);
 
         if (!order) {
-            res.redirect(URLUtils.https('Cart-Show'));
+            res.setStatusCode(303);
+            res.setHttpHeader('Location', URLUtils.https('Cart-Show').toString());
             return;
         }
     }
@@ -70,8 +71,8 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
     var URLUtils = require('dw/web/URLUtils');
     var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
     var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
-    var currentBasket = BasketMgr.getCurrentBasket();
 
+    var currentBasket = BasketMgr.getCurrentBasket();
     if (!currentBasket) {
         res.redirect(URLUtils.https('Cart-Show'));
         return next();
@@ -104,6 +105,7 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
  * Verify with Klarna that the order has been created in SFCC
  */
 server.post('Push', server.middleware.https, function (req, res) {
+    var Order = require('dw/order/Order');
     var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
     var klarnaOrderID = req.querystring.klarna_order_id;
     var klarnaCountry = req.querystring.klarna_country;
@@ -124,8 +126,10 @@ server.post('Push', server.middleware.https, function (req, res) {
         localeId: localeId
     });
 
-    if (placeOrderResult.order_created) {
+    if (placeOrderResult.order_created && placeOrderResult.order && placeOrderResult.order.status.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
         klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject);
+    } else {
+        klarnaOrderService.cancelOrder(klarnaOrderID, localeObject);
     }
 
     res.setStatusCode(200);

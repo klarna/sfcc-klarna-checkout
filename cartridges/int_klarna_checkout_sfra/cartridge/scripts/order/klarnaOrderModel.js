@@ -7,6 +7,9 @@
      * Hoisting functions
     */
 
+    /**
+    * Klarna order billing_address object
+    */
     function BillingAddress() {
         this.title = '';
         this.given_name = '';
@@ -21,6 +24,9 @@
         this.country = '';
     }
 
+    /**
+    * Klarna order line object
+    */
     function LineItem() {
         this.type = '';
         this.name = '';
@@ -33,6 +39,9 @@
         this.total_discount_amount = 0;
     }
 
+    /**
+    * Klarna order merchant_urls object
+    */
     function MerchantUrls() {
         this.terms = '';
         this.checkout = '';
@@ -44,6 +53,9 @@
         this.notification = '';
     }
 
+    /**
+    * Klarna order UI options object
+    */
     function Options() {
         this.title_mandatory = true;
         this.date_of_birth_mandatory = false;
@@ -60,10 +72,16 @@
         this.color_link = '#FF9900';
     }
 
+    /**
+    * Klarna order Gui object
+    */
     function Gui() {
         this.options = [];
     }
 
+    /**
+    * Klarna order shipping_options object
+    */
     function ShippingOption() {
         this.id = '';
         this.name = '';
@@ -75,6 +93,9 @@
         this.shipping_method = 'Home';
     }
 
+    /**
+    * Klarna order model
+    */
     function KlarnaOrderModel() {
         this.billing_address = new BillingAddress();
         this.order_lines = [];

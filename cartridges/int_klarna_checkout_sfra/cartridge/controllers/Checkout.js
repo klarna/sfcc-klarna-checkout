@@ -17,6 +17,8 @@ var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 function prepareShipping(basket, localeObject) {
     var Transaction = require('dw/system/Transaction');
     var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
+    var ShippingMgr = require('dw/order/ShippingMgr');
+
     var shipment = basket.defaultShipment;
 
     Transaction.wrap(function () {
@@ -27,7 +29,8 @@ function prepareShipping(basket, localeObject) {
             shippingAddress.postalCode = ' ';
         }
 
-        ShippingHelper.selectShippingMethod(shipment);
+        var currentShippingMethod = shipment.getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
+        ShippingHelper.selectShippingMethod(shipment, currentShippingMethod.getID());
 
         COHelpers.recalculateBasket(basket);
     });
@@ -52,8 +55,8 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
     var OrderModel = require('*/cartridge/models/order');
     var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
-    var currentBasket = BasketMgr.getCurrentBasket();
 
+    var currentBasket = BasketMgr.getCurrentBasket();
     if (!currentBasket) {
         res.redirect(URLUtils.https('Cart-Show'));
         return next();
@@ -101,7 +104,7 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
 
     prepareShipping(currentBasket, localeObject);
 
-    HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD.toLowercase(), 'Handle',
+    HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD.toLowerCase(), 'Handle',
         currentBasket
     );
 

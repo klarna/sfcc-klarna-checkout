@@ -2,25 +2,24 @@
 
 var server = require('server');
 
-var BasketMgr = require('dw/order/BasketMgr');
-var URLUtils = require('dw/web/URLUtils');
-var Transaction = require('dw/system/Transaction');
-var Locale = require('dw/util/Locale');
-var PaymentInstrument = require('dw/order/PaymentInstrument');
-var PaymentMgr = require('dw/order/PaymentMgr');
-var ShippingMgr = require('dw/order/ShippingMgr');
-
-/* Script Modules */
-var OrderModel = require('*/cartridge/models/order');
-var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
-var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
 
 /**
  * Select a shipping method for the default shipment.
  */
 server.get('SelectShippingMethod', server.middleware.https, function (req, res, next) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var URLUtils = require('dw/web/URLUtils');
+    var Transaction = require('dw/system/Transaction');
+    var Locale = require('dw/util/Locale');
+    var PaymentInstrument = require('dw/order/PaymentInstrument');
+    var PaymentMgr = require('dw/order/PaymentMgr');
+    var OrderModel = require('*/cartridge/models/order');
+    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+    var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
+
     var currentBasket = BasketMgr.getCurrentBasket();
+
     if (!currentBasket) {
         res.json({ success: false });
         return next();
@@ -73,6 +72,15 @@ server.get('SelectShippingMethod', server.middleware.https, function (req, res, 
  *  @transactional
  */
 server.get('UpdateShippingAddress', server.middleware.https, function (req, res, next) {
+    var BasketMgr = require('dw/order/BasketMgr');
+    var URLUtils = require('dw/web/URLUtils');
+    var Transaction = require('dw/system/Transaction');
+    var Locale = require('dw/util/Locale');
+    var PaymentInstrument = require('dw/order/PaymentInstrument');
+    var PaymentMgr = require('dw/order/PaymentMgr');
+    var OrderModel = require('*/cartridge/models/order');
+    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+
     var currentBasket = BasketMgr.getCurrentBasket();
 
     if (!currentBasket) {
@@ -164,14 +172,20 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
  * @transaction
  */
 server.get('UpdateShippingMethodList', server.middleware.https, function (req, res, next) {
-    var currentBasket = BasketMgr.getCurrentBasket();
+    var BasketMgr = require('dw/order/BasketMgr');
+    var Transaction = require('dw/system/Transaction');
+    var Locale = require('dw/util/Locale');
+    var ShippingMgr = require('dw/order/ShippingMgr');
+    var OrderModel = require('*/cartridge/models/order');
+    var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
 
+    var currentBasket = BasketMgr.getCurrentBasket();
     if (!currentBasket) {
         res.json({ success: false });
         return next();
     }
 
-    var address = new Object();
+    var address = {};
     address.countryCode = req.querystring.countryCode;
     address.stateCode = req.querystring.stateCode;
     address.postalCode = req.querystring.postalCode;
@@ -179,12 +193,17 @@ server.get('UpdateShippingMethodList', server.middleware.https, function (req, r
     address.address1 = req.querystring.address1;
     address.address2 = req.querystring.address2;
 
+    var shipment = currentBasket.getDefaultShipment();
+
     if (!address.countryCode) {
-        var currentLocale = Locale.getLocale(req.locale.id);
-        address.countryCode = currentLocale.country;
+        if (shipment.shippingAddress && shipment.shippingAddress.countryCode) {
+            address.countryCode = currentBasket.defaultShipment.shippingAddress.countryCode.value;
+        } else {
+            var currentLocale = Locale.getLocale(req.locale.id);
+            address.countryCode = currentLocale.country;
+        }
     }
 
-    var shipment = currentBasket.getDefaultShipment();
     var applicableShippingMethods = ShippingHelper.getApplicableShippingMethods(shipment, address);
     var currentShippingMethod = shipment.getShippingMethod() || ShippingMgr.getDefaultShippingMethod();
 

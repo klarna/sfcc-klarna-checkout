@@ -34,7 +34,7 @@
                         </div>
                         <div class="card-body">
                             <div id="shipping-method-list" data-update-shippingmethods="${URLUtils.https('KlarnaCheckoutShippingServices-UpdateShippingMethodList').toString()}">
-                                <isinclude url="${URLUtils.url('KlarnaCheckoutShippingServices-UpdateShippingMethodList', 'countryCode', pdict.localeObject.custom.country)}"/>
+                                <isinclude url="${URLUtils.url('KlarnaCheckoutShippingServices-UpdateShippingMethodList')}"/>
                             </div>
                         </div>
                     </div>

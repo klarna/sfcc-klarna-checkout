@@ -8,7 +8,10 @@ var KlarnaHttpService = require('~/cartridge/scripts/services/KlarnaHttpService'
 var KlarnaApiContext = require('~/cartridge/scripts/services/KlarnaApiContext');
 var KlarnaOrderRequestBuilder = require('~/cartridge/scripts/order/klarnaOrderRequestBuilder');
 
-
+/**
+ * @constructor
+ * @classdesc Klarna Checkout API service wrapper
+ */
 function KlarnaOrderService() {
     this.logger = Logger.getLogger('Klarna');
     this.klarnaHttpService = new KlarnaHttpService();
@@ -46,8 +49,9 @@ function KlarnaOrderService() {
     /**
      * API call to update Klarna order
      *
-     * @param  {dw.order.Basket} basket
-     * @param  {dw.object.CustomObject} localeObject
+     * @param  {dw.order.Basket} basket current basket
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @param  {string} klarnaOrderID the ID of the Klarna order
      * @return {string} Html snippet used for rendering the Klarna checkout
     */
     this.updateOrder = function (basket, localeObject, klarnaOrderID) {
@@ -73,9 +77,9 @@ function KlarnaOrderService() {
     /**
      * API call to read an order from Klarna
      *
-     * @param  {string} klarnaOrderID
-     * @param  {dw.object.CustomObject} localeObject
-     * @param  {boolean} isCompletedOrder
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @param  {boolean} isCompletedOrder whether the order is placed at Klarna end
      * @return {Object} Klarna Order Object
     */
     this.getOrder = function (klarnaOrderID, localeObject, isCompletedOrder) {
@@ -94,10 +98,27 @@ function KlarnaOrderService() {
     };
 
     /**
+     * API call to cancel an order in Klarna
+     *
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @return {void}
+    */
+    this.cancelOrder = function (klarnaOrderID, localeObject) {
+        var requestUrl = StringUtils.format(this.klarnaApiContext.getFlowApiUrls().get('cancelOrder'), klarnaOrderID);
+
+        try {
+            this.klarnaHttpService.call(requestUrl, 'POST', localeObject.custom.credentialID);
+        } catch (e) {
+            this.logger.error(e);
+        }
+    };
+
+    /**
      * API call to acknowledge the order
      *
-     * @param  {string} klarnaOrderID
-     * @param  {dw.object.CustomObject} localeObject
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
      * @return {void}
     */
     this.acknowledgeOrder = function (klarnaOrderID, localeObject) {
@@ -112,10 +133,9 @@ function KlarnaOrderService() {
     /**
      * API call to fully capture Klarna order
      *
-     * @param  {string} klarnaOrderID
-     * @param  {dw.object.CustomObject} localeObject
-     * @param  {dw.order.Order} order
-     * @param  {dw.order.PaymentInstrument} paymentInstrument
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @param  {dw.value.Money} amount the amount to be captured
      * @return {boolean} whether the capture was successful
     */
     this.captureOrder = function (klarnaOrderID, localeObject, amount) {
@@ -137,8 +157,8 @@ function KlarnaOrderService() {
     /**
      * API call to update Klarna Order Merchant References
      *
-     * @param  {string} klarnaOrderID
-     * @param  {dw.object.CustomObject} localeObject
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
      * @return {Object} the settlement
     */
     this.createVCNSettlement = function (klarnaOrderID, localeObject) {
@@ -159,9 +179,9 @@ function KlarnaOrderService() {
     /**
      * API call to update Klarna Order Merchant References
      *
-     * @param  {string} klarnaOrderID
-     * @param  {dw.object.CustomObject} localeObject
-     * @param  {string} value
+     * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @param  {string} value the value which has to be set as merchant reference
      * @return {boolean} true if successful, false otherwise
     */
     this.updateOrderMerchantReferences = function (klarnaOrderID, localeObject, value) {
