@@ -6,9 +6,9 @@
 
 /**
  * Create a gift certificate for a gift certificate line item in the order
- * @param {dw.order.GiftCertificateLineItem} giftCertificateLineItem
- * @param {String} orderNo the order number of the order to associate gift certificate to
- * @return {dw.order.GiftCertificate}
+ * @param {dw.order.GiftCertificateLineItem} giftCertificateLineItem the giftCertificateLineItem
+ * @param {string} orderNo the order number of the order to associate gift certificate to
+ * @return {dw.order.GiftCertificate} the giftCertificate
  */
 function createGiftCertificateFromLineItem(giftCertificateLineItem, orderNo) {
     var GiftCertificateMgr = require('dw/order/GiftCertificateMgr');
@@ -24,7 +24,8 @@ function createGiftCertificateFromLineItem(giftCertificateLineItem, orderNo) {
 
 /**
  * Send an email to recipient of gift certificate
- * @param {dw.order.GiftCertificate} giftCertificate
+ * @param {dw.order.GiftCertificate} giftCertificate the giftCertificate
+ * @returns {void}
  */
 function sendGiftCertificateEmail(giftCertificate) {
     var Email = require('./EmailModel');

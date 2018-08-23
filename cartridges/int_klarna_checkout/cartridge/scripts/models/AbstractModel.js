@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 
 /**
@@ -22,7 +24,8 @@ var AbstractModel = Class.extend({
      *
      * @extends module:util/Class~Class
      * @constructs module:models/AbstractModel~AbstractModel
-     * @param obj {Object}
+     * @param {Object} obj object
+     * @returns {Object} this;
      * @see https://bitbucket.org/demandware/sitegenesis-community/wiki/Home
      */
     init: function (obj) {
@@ -38,11 +41,11 @@ var AbstractModel = Class.extend({
     },
 
     /**
-     * Returns a wrapped object instance. This method needs to be implemented by the subclasses.
+     * This method needs to be implemented by the subclasses.
      *
      * @abstract
      * @alias module:models/AbstractModel~AbstractModel/get
-     * @return {Void}
+     * @return {Object} Returns a wrapped object instance.
      */
     get: function () {
         Logger.warn('Generic helper access method "get()" not implemented for subclass');
@@ -54,8 +57,8 @@ var AbstractModel = Class.extend({
      * If the key is point-delimited, parses JSON
      * If not, obtains a value from "custom" property of an object
      * @alias module:models/AbstractModel~AbstractModel/getValue
-     * @param {String} key The JSON key to retrieve a value for.
-     * @return {Object}
+     * @param {string} key The JSON key to retrieve a value for.
+     * @return {Object} the value
      */
     getValue: function (key) {
         if (empty(key)) {

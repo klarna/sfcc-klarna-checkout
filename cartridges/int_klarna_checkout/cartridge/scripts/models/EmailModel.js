@@ -1,3 +1,6 @@
+/* globals session:false, request:false, response:false, customer:false */
+/* eslint no-underscore-dangle: 0 */
+
 'use strict';
 
 /**
@@ -63,8 +66,8 @@ var EmailModel = AbstractModel.extend({
 
         // @TODO Enable this to allow for a shared pt_email which creates consistent header/footer
         // integrate the body in the global content
-        //var template = new dw.util.Template('mail/pt_email');
-        //var content = template.render(params);
+        // var template = new dw.util.Template('mail/pt_email');
+        // var content = template.render(params);
 
         // Sets the content and sends it.
         this.object.setContent(params.MainContent, 'text/html', 'UTF-8');
@@ -81,9 +84,9 @@ var EmailModel = AbstractModel.extend({
  * Gets a wrapped email instance.
  *
  * @alias module:models/EmailModel~EmailModel/get
- * @param {String} template The template that is rendered and sent as email.
- * @param {String} recipient The email address where the text of the rendered template is sent.
- * @returns {module:models/EmailModel~EmailModel}
+ * @param {string} template The template that is rendered and sent as email.
+ * @param {string} recipient The email address where the text of the rendered template is sent.
+ * @returns {module:models/EmailModel~EmailModel} EmailModel
  */
 EmailModel.get = function (template, recipient) {
     return new EmailModel(template, recipient);
@@ -103,17 +106,12 @@ EmailModel.get = function (template, recipient) {
  *     }
  * });
  * ````
- * @param {Object} options
- * @param {String} options.recipient
- * @param {String} options.template
- * @param {String} options.subject
- * @param {String} options.from
- * @param {Object} options.context
+ * @param {Object} options email options
  * @return {dw.system.Status} whether the mail was successfully queued (Status.OK) or not (Status.ERROR).
  */
 EmailModel.sendMail = function (options) {
     if (!options.template || !options.recipient || !options.subject) {
-        return;
+        return null;
     }
     var mail = new Mail();
     mail.addTo(options.recipient);

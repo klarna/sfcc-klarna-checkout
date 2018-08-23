@@ -28,14 +28,13 @@ var QuantityLineItemModel = Class.extend(
         bonusProductLineItem: null,
 
         init: function (productLineItem) {
-
             this.quantity = new Quantity(1, productLineItem.quantity.getUnit());
             this.lineItemText = productLineItem.lineItemText;
             this.productID = productLineItem.productID;
             this.pliUUID = productLineItem.UUID;
             this.bonusProductLineItem = productLineItem.bonusProductLineItem;
 
-            //Persists the optionID. If the product does not have an option, it is set to 'na'.
+            // Persists the optionID. If the product does not have an option, it is set to 'na'.
             if (productLineItem.optionProductLineItems.size() > 0) {
                 for (var iter = productLineItem.optionProductLineItems.iterator(); iter.hasNext();) {
                     var item = iter.next();
@@ -44,7 +43,6 @@ var QuantityLineItemModel = Class.extend(
             } else {
                 this.optionID = 'na';
             }
-
         }
 
     });

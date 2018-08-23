@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 /**
  * Model for cart functionality. Creates a CartModel class with payment, shipping, and product

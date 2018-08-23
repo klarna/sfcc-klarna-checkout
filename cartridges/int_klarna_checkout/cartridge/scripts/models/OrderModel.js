@@ -16,7 +16,7 @@ var Transaction = require('dw/system/Transaction');
 /**
  * Place an order using OrderMgr. If order is placed successfully,
  * its status will be set as confirmed, and export status set to ready.
- * @param {dw.order.Order} order
+ * @param {dw.order.Order} order the order
  */
 function placeOrder(order) {
     var placeOrderStatus = OrderMgr.placeOrder(order);
@@ -42,8 +42,8 @@ var OrderModel = AbstractModel.extend({
  * Gets a new instance for a given order or order number.
  *
  * @alias module:models/OrderModel~OrderModel/get
- * @param parameter {dw.order.Order | String} The order object to enhance/wrap or the order ID of the order object.
- * @returns {module:models/OrderModel~OrderModel}
+ * @param {dw.order.Order | string} parameter The order object to enhance/wrap or the order ID of the order object.
+ * @returns {module:models/OrderModel~OrderModel} OrderModel
  */
 OrderModel.get = function (parameter) {
     var obj = null;
@@ -57,7 +57,7 @@ OrderModel.get = function (parameter) {
 
 /**
  * Submits an order
- * @param order {dw.order.Order} The order object to be submitted.
+ * @param {dw.order.Order} order The order object to be submitted.
  * @transactional
  * @return {Object} object If order cannot be placed, object.error is set to true. Ortherwise, object.order_created is true, and object.Order is set to the order.
  */
@@ -74,7 +74,7 @@ OrderModel.submit = function (order) {
         order.getGiftCertificateLineItems().toArray().map(function (lineItem) {
             return GiftCertificate.createGiftCertificateFromLineItem(lineItem, order.getOrderNo());
         }).forEach(GiftCertificate.sendGiftCertificateEmail);
-        
+
         Transaction.commit();
     } catch (e) {
         Transaction.rollback();
@@ -97,7 +97,7 @@ OrderModel.submit = function (order) {
         Order: order,
         order_created: true
     };
-}
+};
 
 /** The order class */
 module.exports = OrderModel;

@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 /**
  * Model for product list functionality, such as wishlists.
@@ -103,7 +105,7 @@ var ProductListModel = AbstractModel.extend(
             var productItems = this.getProductItems().iterator();
 
             while (productItems.hasNext()) {
-                let productItem = productItems.next();
+                var productItem = productItems.next();
                 if (product.ID === productItem.productID) {
                     return true;
                 }

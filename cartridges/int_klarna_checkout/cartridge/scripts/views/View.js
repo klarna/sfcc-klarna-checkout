@@ -1,4 +1,7 @@
+/* eslint-disable */
+
 'use strict';
+
 /**
  * Standard view used to render most templates.
  * @module views/View

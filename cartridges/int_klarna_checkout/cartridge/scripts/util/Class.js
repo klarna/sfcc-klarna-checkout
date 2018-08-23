@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 /**
  *
  *		No changes were made to this script. It was copied over from 

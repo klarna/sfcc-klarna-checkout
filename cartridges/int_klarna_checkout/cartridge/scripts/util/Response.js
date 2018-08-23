@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 
 /**
@@ -12,6 +14,6 @@
 exports.renderJSON = function (object) {
     response.setContentType('application/json');
 
-    let json = JSON.stringify(object);
+    var json = JSON.stringify(object);
     response.writer.print(json);
 };

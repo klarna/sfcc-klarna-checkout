@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 
 /* API Includes */
@@ -15,7 +17,6 @@ var app = require('~/cartridge/scripts/app');
 function Handle(args) {
     var cart = Cart.get(args.Basket);
     var creditCardForm = app.getForm('billing.paymentMethods.creditCard');
-    var PaymentMgr = require('dw/order/PaymentMgr');
 
     var cardNumber = creditCardForm.get('number').value();
     var cardSecurityCode = creditCardForm.get('cvn').value();
@@ -27,11 +28,10 @@ function Handle(args) {
     var creditCardStatus = paymentCard.verify(expirationMonth, expirationYear, cardNumber, cardSecurityCode);
 
     if (creditCardStatus.error) {
-
         var invalidatePaymentCardFormElements = require('app_storefront_core/cartridge/scripts/checkout/InvalidatePaymentCardFormElements');
         invalidatePaymentCardFormElements.invalidatePaymentCardForm(creditCardStatus, session.forms.billing.paymentMethods.creditCard);
 
-        return {error: true};
+        return { error: true };
     }
 
     Transaction.wrap(function () {

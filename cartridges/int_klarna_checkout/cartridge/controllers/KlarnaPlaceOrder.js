@@ -1,3 +1,5 @@
+/* globals session:false */
+
 'use strict';
 
 /**
@@ -18,89 +20,99 @@ var Status = require('dw/system/Status');
 var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
 var Order = app.getModel('Order');
 var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
-var KlarnaHttpService = require('~/cartridge/scripts/common/KlarnaHttpService.ds');
-var KlarnaApiContext = require('~/cartridge/scripts/common/KlarnaApiContext');
+var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 var KLARNA_PAYMENT_METHOD = require('int_klarna_checkout/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
-var KLARNA_CHECKOUT = require('int_klarna_checkout/cartridge/scripts/payment/processor/KLARNA_CHECKOUT.js');
-
 
 /**
- * The entry point for placing the order in SCC.
+ * Set SFCC Order Customer
  *
- * @return {Object} JSON object that is empty, contains error information, or PlaceOrderError status information.
+ * @param  {dw.order.Order} order SFCC order
+ * @param  {string} customerNo the customer number
+ * @return {void}
  */
-function start(context) {
-	var order, klarnaOrderObj, localeObject, isPendingOrder;
+function setOrderCustomer(order, customerNo) {
+    var orderCustomer = CustomerMgr.getCustomerByCustomerNumber(customerNo);
 
-	klarnaOrderObj = context.klarnaOrderObject;
-	localeObject = context.localeObject;
-	isPendingOrder = context.isPendingOrder;
+    if (orderCustomer !== null) {
+        order.setCustomer(orderCustomer);
 
-	order = OrderMgr.getOrder(klarnaOrderObj.merchant_reference1);
+        var customerName;
 
-	if (!order) {
-		order = createOrder(klarnaOrderObj, localeObject);
-		if (!order) {
-			return {
-				error: true,
-				PlaceOrderError: new Status(dw.system.Status.ERROR, "confirm.error.technical")
-		    };
-		}
-	}
+        if (orderCustomer.profile.firstName) {
+            customerName = orderCustomer.profile.firstName;
+        }
 
-	if (order.status.value !== order.ORDER_STATUS_CREATED) {
-		return {
-	        Order: order,
-	        order_created: true
-	    };
-	}
+        if (orderCustomer.profile.lastName) {
+            if (customerName) {
+                customerName += ' ' + orderCustomer.profile.lastName;
+            } else {
+                customerName = orderCustomer.profile.lastName;
+            }
+        }
 
-	KLARNA_CHECKOUT.Handle({Basket: order});
+        if (customerName) {
+            order.setCustomerName(customerName);
+        }
+    }
+}
 
-	var handlePaymentsResult = handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder);
+/**
+ * Creates the order in SFCC
+ *
+ * @transactional
+ * @param {Object} klarnaOrderObject Klarna order
+ * @param  {dw.object.CustomObject} localeObject Klara region specific options
+ * @return  {dw.order.Order} order or null
+ */
+function createOrder(klarnaOrderObject, localeObject) {
+    var cart = KlarnaCartModel.goc();
 
-	if (handlePaymentsResult.error) {
-        return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
-            session.custom.klarnaOrderID = null;
-            return {
-                error: true,
-                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.technical')
-            };
-        });
+    Transaction.wrap(function () {
+        cart.restore(klarnaOrderObject);
+    });
 
-    } else if (handlePaymentsResult.missingPaymentInfo) {
-        return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
-            session.custom.klarnaOrderID = null;
-            return {
-                error: true,
-                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.technical')
-            };
-        });
+    var validationResult = cart.validateForCheckout();
+    if (!validationResult.EnableCheckout) {
+        return null;
+    }
 
-    } else if (handlePaymentsResult.declined) {
-		return Transaction.wrap(function () {
-			OrderMgr.failOrder(order);
-			session.custom.klarnaOrderID = null;
-			return {
-				error: true,
-				PlaceOrderError: new Status(Status.ERROR, 'confirm.error.declined') 
-			};
-		});    
+    Transaction.begin();
 
-    } else if (handlePaymentsResult.pending) {
-    	return {
-            order_created: true,
-            Order: order
-        };
-	}
+    var order = null;
 
-    var orderPlacementStatus = Order.submit(order);
+    try {
+        if (klarnaOrderObject.merchant_reference1) {
+            order = OrderMgr.createOrder(cart.object, klarnaOrderObject.merchant_reference1);
+        } else {
+            order = OrderMgr.createOrder(cart.object);
 
-    return orderPlacementStatus;
-	
-	
+            var regionOptions;
+            if (!localeObject) {
+                var utils = require('~/cartridge/scripts/util/KlarnaHelper');
+                regionOptions = utils.getLocaleObject();
+            } else {
+                regionOptions = localeObject;
+            }
+
+            var klarnaOrderService = new KlarnaOrderService();
+            klarnaOrderService.updateOrderMerchantReferences(klarnaOrderObject.order_id, regionOptions, order.orderNo);
+        }
+
+        if (klarnaOrderObject.merchant_reference2) {
+            setOrderCustomer(order, klarnaOrderObject.merchant_reference2);
+        }
+
+        order.setExternalOrderNo(klarnaOrderObject.order_id);
+        order.setExternalOrderStatus(klarnaOrderObject.status);
+        order.setExternalOrderText(KLARNA_PAYMENT_METHOD);
+    } catch (e) {
+        Transaction.rollback();
+        return null;
+    }
+
+    Transaction.commit();
+
+    return order;
 }
 
 /**
@@ -112,13 +124,15 @@ function start(context) {
  *
  * @transactional
  * @param {dw.order.Order} order - the order to handle payments for.
+ * @param  {Object} klarnaOrderObj the Klarna order
+ * @param  {dw.object.CustomObject} localeObject Klara region specific options
+ * @param  {boolean} isPendingOrder whether the SFCC is in Pending status
  * @return {Object} JSON object containing information about missing payments, errors, or an empty object if the function is successful.
  */
 function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
-	var kcoAuthorizationResult = {};
+    var kcoAuthorizationResult = {};
 
     if (order.getTotalNetPrice() !== 0.00) {
-
         var paymentInstruments = order.getPaymentInstruments();
 
         if (paymentInstruments.length === 0) {
@@ -126,44 +140,36 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
                 missingPaymentInfo: true
             };
         }
-        /**
-         * Sets the transaction ID for the payment instrument.
-         */
-        var handlePaymentTransaction = function () {
-            paymentInstrument.getPaymentTransaction().setTransactionID(order.getOrderNo());
-        };
 
         for (var i = 0; i < paymentInstruments.length; i++) {
             var paymentInstrument = paymentInstruments[i];
 
             if (PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor() === null) {
-
-                Transaction.wrap(handlePaymentTransaction);
-
+                Transaction.begin();
+                paymentInstrument.getPaymentTransaction().setTransactionID(order.getOrderNo());
+                Transaction.commit();
             } else {
-            	var authorizationResult = {};
-            	var processor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
-            	if (processor.ID === 'KLARNA_CHECKOUT') {
-            		kcoAuthorizationResult = authorizationResult = KLARNA_CHECKOUT.Authorize({
-                    	Order: order, 
-                    	PaymentInstrument: paymentInstrument, 
-                    	KlarnaOrderObj: klarnaOrderObj, 
-                    	LocaleObject: localeObject, 
-                    	isPendingOrder: isPendingOrder
-                	});
-
-            	} else if (HookMgr.hasHook('app.payment.processor.' + processor.ID)) {
-            		if (!isPendingOrder) {
-	            		authorizationResult = HookMgr.callHook('app.payment.processor.' + processor.ID, 'Authorize', {
-	                        Order: order,
-	                        OrderNo: order.getOrderNo(),
-	                        PaymentInstrument: paymentInstrument
-	                    });
-            		}
-
-            	} else {
-            		authorizationResult = {not_supported: true};
-            	}
+                var authorizationResult = {};
+                var processor = PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor();
+                if (processor.ID === 'KLARNA_CHECKOUT') {
+                    kcoAuthorizationResult = authorizationResult = HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD, 'Authorize', {
+                        Order: order,
+                        PaymentInstrument: paymentInstrument,
+                        KlarnaOrderObj: klarnaOrderObj,
+                        LocaleObject: localeObject,
+                        isPendingOrder: isPendingOrder
+                    });
+                } else if (HookMgr.hasHook('app.payment.processor.' + processor.ID)) {
+                    if (!isPendingOrder) {
+                        authorizationResult = HookMgr.callHook('app.payment.processor.' + processor.ID, 'Authorize', {
+                            Order: order,
+                            OrderNo: order.getOrderNo(),
+                            PaymentInstrument: paymentInstrument
+                        });
+                    }
+                } else {
+                    authorizationResult = { not_supported: true };
+                }
 
                 if (authorizationResult.not_supported || authorizationResult.error) {
                     return {
@@ -178,115 +184,79 @@ function handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder) {
 }
 
 /**
- * Creates the order in SFCC
+ * The entry point for placing the order in SCC.
  *
- * @transactional
- * @return  {dw.order.Order} order
+ * @param {Object} context page context
+ * @return {Object} JSON object that is empty, contains error information, or PlaceOrderError status information.
  */
-function createOrder(klarnaOrderObject, localeObject) {
-	var cart, validationResult, order;
+function start(context) {
+    var klarnaOrderObj = context.klarnaOrderObject;
+    var localeObject = context.localeObject;
+    var isPendingOrder = context.isPendingOrder;
 
-	cart = KlarnaCartModel.goc();
+    var order = OrderMgr.getOrder(klarnaOrderObj.merchant_reference1);
 
-	Transaction.wrap(function () {
-		cart.restore(klarnaOrderObject);
-	});
-
-	validationResult = cart.validateForCheckout();
-    if (!validationResult.EnableCheckout) {
-    	return;
+    if (!order) {
+        order = createOrder(klarnaOrderObj, localeObject);
+        if (!order) {
+            return {
+                error: true,
+                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.technical')
+            };
+        }
     }
 
-    Transaction.begin();
-
-    try {
-    	if (klarnaOrderObject.merchant_reference1) {
-    		order = OrderMgr.createOrder(cart.object, klarnaOrderObject.merchant_reference1);
-    	} else {
-
-    		if (!localeObject) {
-    			var utils = require('~/cartridge/scripts/util/KlarnaHelper');
-    			localeObject = utils.getLocaleObject();
-    		}
-
-    		order = OrderMgr.createOrder(cart.object);
-    		updateKlarnaOrderMerchantReferences(klarnaOrderObject.order_id, localeObject, order.orderNo);
-    	}
-
-	    if (klarnaOrderObject.merchant_reference2) {
-	    	setOrderCustomer(order, klarnaOrderObject.merchant_reference2)
-	    }
-
-	    order.setExternalOrderNo(klarnaOrderObject.order_id);
-
-	   	order.setExternalOrderStatus(klarnaOrderObject.status);
-
-	   	order.setExternalOrderText(KLARNA_PAYMENT_METHOD);
-
-    } catch (e) {
-    	Transaction.rollback();
-    	return;
+    if (order.status.value !== order.ORDER_STATUS_CREATED) {
+        return {
+            Order: order,
+            order_created: true
+        };
     }
 
-   	Transaction.commit();
+    HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD, 'Handle',
+        order
+    );
 
-   	return order;
+    var handlePaymentsResult = handlePayments(order, klarnaOrderObj, localeObject, isPendingOrder);
+
+    if (handlePaymentsResult.error) {
+        return Transaction.wrap(function () {
+            OrderMgr.failOrder(order);
+            session.privacy.klarnaOrderID = null;
+            return {
+                error: true,
+                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.technical')
+            };
+        });
+    } else if (handlePaymentsResult.missingPaymentInfo) {
+        return Transaction.wrap(function () {
+            OrderMgr.failOrder(order);
+            session.privacy.klarnaOrderID = null;
+            return {
+                error: true,
+                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.technical')
+            };
+        });
+    } else if (handlePaymentsResult.declined) {
+        return Transaction.wrap(function () {
+            OrderMgr.failOrder(order);
+            session.privacy.klarnaOrderID = null;
+            return {
+                error: true,
+                PlaceOrderError: new Status(Status.ERROR, 'confirm.error.declined')
+            };
+        });
+    } else if (handlePaymentsResult.pending) {
+        return {
+            order_created: true,
+            Order: order
+        };
+    }
+
+    var orderPlacementStatus = Order.submit(order);
+
+    return orderPlacementStatus;
 }
-
-/**
- * Set SFCC Order Customer
- *
- * @param  {dw.order.Order} order
- * @param  {String} customerNo
- * @return {void}
- */
-function setOrderCustomer(order, customerNo) {
-	var customer = CustomerMgr.getCustomerByCustomerNumber(customerNo);
-
-	if (customer !== null) {
-		order.setCustomer(customer);
-
-		if (!empty(customer.profile.firstName)) {
-			customerName = customer.profile.firstName;
-		}
-
-		if (!empty(customer.profile.lastName)) {
-			customerName += ' ' + customer.profile.lastName;
-		}
-
-		if (!empty(customerName)) {
-			order.setCustomerName(customerName);
-		}
-	}
-}
-
-/**
- * API call to update Klarna Order Merchant References
- *
- * @param  {String} klarnaOrderID
- * @param  {dw.object.CustomObject} localeObject
- * @param  {String} orderNo
- * @return {Boolean} true if successful, false otherwise
- */
-function updateKlarnaOrderMerchantReferences(klarnaOrderID, localeObject, orderNo) {
-	var klarnaHttpService = new KlarnaHttpService();
-    var klarnaApiContext = new KlarnaApiContext();
-    var requestBodyObject = new Object();
-
-	requestBodyObject.merchant_reference1 = orderNo;
-
-	var requestUrl = dw.util.StringUtils.format(klarnaApiContext.getFlowApiUrls().get('updateMerchantReferences'), klarnaOrderID);
-	var response;
-
-	try {
-		response = klarnaHttpService.call(requestUrl, 'PATCH', localeObject.custom.credentialID, requestBodyObject);
-	} catch (e) {
-		return false;
-	}
-
-	return true;
-}
-
 
 /*
 * Exposed methods.

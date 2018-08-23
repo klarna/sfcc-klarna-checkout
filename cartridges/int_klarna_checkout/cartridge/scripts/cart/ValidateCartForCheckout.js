@@ -1,9 +1,11 @@
+/* eslint-disable */
+
 'use strict';
 
 /**
  *
- *		No changes were made to this script. It was copied over from 
- *		Site Genesis to prevent complications with external cartridge 
+ *		No changes were made to this script. It was copied over from
+ *		Site Genesis to prevent complications with external cartridge
  *		references
  *
  * ValidateCartForCheckout
@@ -183,6 +185,7 @@ function validateContent(basket) {
  * Validates coupons
  *
  * @param {dw.order.Basket} basket
+ * @returns {boolean} is valid
  */
 function validateCoupons(basket) {
     // type: Iterator

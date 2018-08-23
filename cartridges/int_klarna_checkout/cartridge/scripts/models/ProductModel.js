@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 'use strict';
 
 /**
@@ -41,14 +43,14 @@ var ProductModel = AbstractModel.extend(
          * @returns {dw.catalog.ProductVariationModel}
          */
         updateVariationSelection: function (parameterMap, optionalCustomPrefix) {
-            let formPrefix = optionalCustomPrefix || 'dwvar_';
+            var formPrefix = optionalCustomPrefix || 'dwvar_';
 
             // Gets all variation-related parameters for the prefix.
-            let params = parameterMap.getParameterMap(formPrefix + this.object.ID.replace(/_/g,'__') + '_');
-            let paramNames = params.getParameterNames();
+            var params = parameterMap.getParameterMap(formPrefix + this.object.ID.replace(/_/g,'__') + '_');
+            var paramNames = params.getParameterNames();
 
             // Return the ProductVariationModel of a sole variant of a Product Master
-            let variants = this.getVariants();
+            var variants = this.getVariants();
             if (variants.length === 1) {
                 return variants[0].getVariationModel();
             }
@@ -61,14 +63,14 @@ var ProductModel = AbstractModel.extend(
                 return this.getVariationModel();
             }
 
-            let ProductVariationModel = app.getModel('ProductVariation');
-            let variationModel = new ProductVariationModel(this.getVariationModel());
+            var ProductVariationModel = app.getModel('ProductVariation');
+            var variationModel = new ProductVariationModel(this.getVariationModel());
 
-            for (let k = 0; k < paramNames.length; k++) {
-                let attributeID = paramNames[k];
-                let valueID = params.get(attributeID).getStringValue();
-                let variationAttribute = variationModel.getProductVariationAttribute(attributeID);
-                let variationAttributeValue;
+            for (var k = 0; k < paramNames.length; k++) {
+                var attributeID = paramNames[k];
+                var valueID = params.get(attributeID).getStringValue();
+                var variationAttribute = variationModel.getProductVariationAttribute(attributeID);
+                var variationAttributeValue;
 
                 if (variationAttribute && valueID) {
                     variationAttributeValue = variationModel.getVariationAttributeValue(variationAttribute, valueID);
@@ -266,12 +268,12 @@ ProductModel.get = function (parameter) {
  * @returns {Boolean}
  */
 function isAttrSelectable (variationGroup, attr, attrValue) {
-    let variationModel = variationGroup.getVariationModel();
-    let selectedVariantsIter = variationModel.getSelectedVariants().iterator();
+    var variationModel = variationGroup.getVariationModel();
+    var selectedVariantsIter = variationModel.getSelectedVariants().iterator();
 
     while (selectedVariantsIter.hasNext()) {
-        let variant = selectedVariantsIter.next();
-        let variantAttrValue;
+        var variant = selectedVariantsIter.next();
+        var variantAttrValue;
 
         variationModel = variant.getVariationModel();
         variantAttrValue = variationModel.getVariationValue(variant, attr);

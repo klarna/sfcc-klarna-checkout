@@ -54,6 +54,6 @@ function execute( args : PipelineDictionary ) : Number
 		return PIPELET_NEXT;
 	}
 	
-	Logger.error('Unknown Klarna Fraud Status');
+	Logger.getLogger('Klarna').error('Unknown Klarna Fraud Status');
     return PIPELET_ERROR;
 }
