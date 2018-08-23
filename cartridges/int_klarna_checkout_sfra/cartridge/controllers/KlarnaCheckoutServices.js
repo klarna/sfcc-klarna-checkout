@@ -87,7 +87,7 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
     var klarnaOrderID = req.session.privacyCache.get('klarnaOrderID');
 
     if (!klarnaOrderID) {
-        isUpdated = klarnaOrderService.createOrder(currentBasket, localeObject, req);
+        isUpdated = klarnaOrderService.createOrder(currentBasket, localeObject);
     } else {
         isUpdated = klarnaOrderService.updateOrder(currentBasket, localeObject, klarnaOrderID);
     }

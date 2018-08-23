@@ -33,9 +33,9 @@
     */
     function handleRequire(params) {
         if (empty(params) ||
-                empty(params.basket) ||
-                empty(params.showShippingMethods) ||
-                empty(params.basket.defaultShipment.shippingAddress)) {
+            empty(params.basket) ||
+            empty(params.showShippingMethods) ||
+            empty(params.basket.defaultShipment.shippingAddress)) {
             throw new Error('Error when generating OrderUpdateResponseBuilder. Not valid params.');
         }
     }

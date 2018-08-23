@@ -115,7 +115,7 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     var klarnaOrderID = req.session.privacyCache.get('klarnaOrderID');
 
     if (!klarnaOrderID) {
-        checkoutSnippet = klarnaOrderService.createOrder(currentBasket, localeObject, req);
+        checkoutSnippet = klarnaOrderService.createOrder(currentBasket, localeObject);
     } else {
         checkoutSnippet = klarnaOrderService.updateOrder(currentBasket, localeObject, klarnaOrderID);
     }

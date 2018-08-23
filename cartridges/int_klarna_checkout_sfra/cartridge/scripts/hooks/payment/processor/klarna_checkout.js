@@ -228,11 +228,12 @@ function Authorize(args) {
     }
 
 	// Plug here your Credit Card Processor
-    Transaction.wrap(function () {
-        paymentInstrument.paymentTransaction.transactionID = order.getOrderNo();
-        paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
-    });
-    return { authorized: true };
+    var HookMgr = require('dw/system/HookMgr');
+    return HookMgr.callHook('app.payment.processor.basic_credit', 'Authorize',
+        order.getOrderNo(),
+        paymentInstrument,
+        PaymentMgr.getPaymentMethod(paymentInstrument.getPaymentMethod()).getPaymentProcessor()
+    );
 }
 
 
