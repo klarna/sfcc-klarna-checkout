@@ -14,17 +14,18 @@ var Site = require('dw/system/Site');
 var Transaction = require('dw/system/Transaction');
 var ShippingMgr = require('dw/order/ShippingMgr');
 var OrderMgr = require('dw/order/OrderMgr');
+var Order = require('dw/order/Order');
 var Logger = require('dw/system/Logger');
 var PaymentMgr = require('dw/order/PaymentMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 var HookMgr = require('dw/system/HookMgr');
-var Order = require('dw/order/Order');
 
 /* Script Modules */
 var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
 var guard = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/guard');
 var utils = require('~/cartridge/scripts/util/KlarnaHelper');
 var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
+var FRAUD_STATUS = require('~/cartridge/scripts/util/KlarnaConstants').FRAUD_STATUS;
 var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
 var KlarnaPlaceOrderController = require('~/cartridge/controllers/KlarnaPlaceOrder');
 var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
@@ -159,7 +160,7 @@ function validation() {
         order = KlarnaPlaceOrderController.CreateOrder(klarnaOrderObject); // eslint-disable-line new-cap
 
         if (!order) {
-            response.setStatusCode(303);
+            response.setStatus(303);
             response.setHttpHeader('Location', URLUtils.https('Cart-Show').toString());
             return;
         }
@@ -311,8 +312,12 @@ function push() {
         localeObject: localeObject
     });
 
-    if (placeOrderResult.order_created && placeOrderResult.order && placeOrderResult.order.status.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
+    var order = (placeOrderResult.order_created && placeOrderResult.Order) ? placeOrderResult.Order : null;
+
+    if (order && order.confirmationStatus.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
         klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject);
+    } else if (order && (order.status.value === Order.ORDER_STATUS_CREATED && klarnaOrderObject.fraud_status === FRAUD_STATUS.PENDING)) {
+        klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject); // @TODO Verify with Klarna if they want acknowledge for pending orders
     } else {
         klarnaOrderService.cancelOrder(klarnaOrderID, localeObject);
     }

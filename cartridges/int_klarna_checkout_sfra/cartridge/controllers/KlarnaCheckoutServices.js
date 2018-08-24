@@ -107,6 +107,7 @@ server.get('UpdateCheckout', server.middleware.https, function (req, res, next) 
 server.post('Push', server.middleware.https, function (req, res) {
     var Order = require('dw/order/Order');
     var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+    var FRAUD_STATUS = require('~/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
     var klarnaOrderID = req.querystring.klarna_order_id;
     var klarnaCountry = req.querystring.klarna_country;
     var localeId = req.locale.id;
@@ -126,8 +127,12 @@ server.post('Push', server.middleware.https, function (req, res) {
         localeId: localeId
     });
 
-    if (placeOrderResult.order_created && placeOrderResult.order && placeOrderResult.order.status.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
+    var order = (placeOrderResult.order_created && placeOrderResult.order) ? placeOrderResult.order : null;
+
+    if (order && order.confirmationStatus.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
         klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject);
+    } else if (order && (order.status.value === Order.ORDER_STATUS_CREATED && klarnaOrderObject.fraud_status === FRAUD_STATUS.PENDING)) {
+        klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject); // @TODO Verify with Klarna if they want acknowledge for pending orders
     } else {
         klarnaOrderService.cancelOrder(klarnaOrderID, localeObject);
     }

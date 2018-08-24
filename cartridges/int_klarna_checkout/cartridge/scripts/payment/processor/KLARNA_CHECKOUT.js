@@ -212,6 +212,8 @@ function Authorize(args) {
                 paymentInstrument.paymentTransaction.type = PaymentTransaction.TYPE_CAPTURE;
                 order.paymentStatus = Order.PAYMENT_STATUS_PAID;
             });
+        } else {
+            Logger.getLogger('Klarna').fatal('Could not capture order {0}, Klarna order ID: {1}', order.getOrderNo(), klarnaOrderID);
         }
     } else {
         Transaction.wrap(function () {

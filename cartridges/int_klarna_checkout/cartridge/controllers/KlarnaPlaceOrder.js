@@ -15,10 +15,10 @@ var CustomerMgr = require('dw/customer/CustomerMgr');
 var PaymentMgr = require('dw/order/PaymentMgr');
 var HookMgr = require('dw/system/HookMgr');
 var Status = require('dw/system/Status');
+var Order = require('dw/order/Order');
 
 /* Script Modules */
 var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
-var Order = app.getModel('Order');
 var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
 var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 var KLARNA_PAYMENT_METHOD = require('int_klarna_checkout/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
@@ -206,7 +206,7 @@ function start(context) {
         }
     }
 
-    if (order.status.value !== order.ORDER_STATUS_CREATED) {
+    if (order.status.value !== Order.ORDER_STATUS_CREATED) {
         return {
             Order: order,
             order_created: true
@@ -253,7 +253,8 @@ function start(context) {
         };
     }
 
-    var orderPlacementStatus = Order.submit(order);
+    var OrderModel = app.getModel('Order');
+    var orderPlacementStatus = OrderModel.submit(order);
 
     return orderPlacementStatus;
 }

@@ -20,6 +20,7 @@ var BasketMgr = require('dw/order/BasketMgr');
 var Transaction = require('dw/system/Transaction');
 var HookMgr = require('dw/system/HookMgr');
 var OrderMgr = require('dw/order/OrderMgr');
+var Order = require('dw/order/Order');
 
 /* Script Modules */
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
@@ -629,7 +630,7 @@ function placeOrder(context) {
         }
     }
 
-    if (order.status.value !== order.ORDER_STATUS_CREATED) {
+    if (order.status.value !== Order.ORDER_STATUS_CREATED) {
         return {
             Order: order,
             order_created: true
