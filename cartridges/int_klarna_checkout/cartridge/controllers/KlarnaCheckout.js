@@ -103,11 +103,13 @@ function start(context) {
 
     var checkoutSnippet;
     var klarnaOrderService = new KlarnaOrderService();
+    var klarnaCountry = session.privacy.klarnaCountry;
+    var klarnaOrderID = (klarnaCountry && localeObject.custom.country !== klarnaCountry) ? null : session.privacy.klarnaOrderID;
 
-    if (!session.privacy.klarnaOrderID) {
+    if (!klarnaOrderID) {
         checkoutSnippet = klarnaOrderService.createOrder(cart.object, localeObject);
     } else {
-        checkoutSnippet = klarnaOrderService.updateOrder(cart.object, localeObject, session.privacy.klarnaOrderID);
+        checkoutSnippet = klarnaOrderService.updateOrder(cart.object, localeObject, klarnaOrderID);
     }
 
     app.getView({

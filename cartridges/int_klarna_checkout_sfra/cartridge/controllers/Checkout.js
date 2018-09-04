@@ -112,7 +112,8 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
 
     var checkoutSnippet;
     var klarnaOrderService = new KlarnaOrderService();
-    var klarnaOrderID = req.session.privacyCache.get('klarnaOrderID');
+    var klarnaCountry = req.session.privacyCache.get('klarnaCountry');
+    var klarnaOrderID = (klarnaCountry && localeObject.custom.country !== klarnaCountry) ? null : req.session.privacyCache.get('klarnaOrderID');
 
     if (!klarnaOrderID) {
         checkoutSnippet = klarnaOrderService.createOrder(currentBasket, localeObject);

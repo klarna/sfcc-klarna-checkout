@@ -41,6 +41,7 @@ function KlarnaOrderService() {
             return null;
         }
 
+        session.privacy.klarnaCountry = localeObject.custom.country;
         session.privacy.klarnaOrderID = response.order_id;
 
         return response.html_snippet;
