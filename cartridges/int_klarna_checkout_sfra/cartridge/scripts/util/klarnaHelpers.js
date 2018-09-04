@@ -1,4 +1,4 @@
-/* globals session:false */
+/* globals session:false, APIException:false */
 
 'use strict';
 
@@ -182,16 +182,20 @@ function clearBasket(basket) {
     basket.removeAllPaymentInstruments();
 
     var productLineItems = basket.getProductLineItems();
-    var productLineItem;
     for (var m = 0; m < productLineItems.length; m++) {
-        productLineItem = productLineItems[m];
+        var productLineItem = productLineItems[m];
         basket.removeProductLineItem(productLineItem);
     }
 
+    var couponLineItems = basket.getCouponLineItems();
+    for (var c = 0; c < couponLineItems.length; c++) {
+        var couponLineItem = couponLineItems[c];
+        basket.removeCouponLineItem(couponLineItem);
+    }
+
     var shipments = basket.getShipments();
-    var shipment;
     for (var l = 0; l < shipments.length; l++) {
-        shipment = shipments[l];
+        var shipment = shipments[l];
 
         if (!shipment.isDefault()) {
             basket.removeShipment(shipment);
@@ -199,9 +203,8 @@ function clearBasket(basket) {
     }
 
     var giftLineItems = basket.getGiftCertificateLineItems();
-    var giftLineItem;
     for (var g = 0; g < giftLineItems.length; g++) {
-        giftLineItem = giftLineItems[g];
+        var giftLineItem = giftLineItems[g];
         basket.removeGiftCertificateLineItem(giftLineItem);
     }
 
@@ -272,7 +275,7 @@ function restoreLineItems(basket, klarnaOrderObj) {
                 product = ProductMgr.getProduct(orderLine.reference);
 
                 if (!product) {
-                    throw new Error('Failed to create productLineItem form Klarna order line');
+                    throw new Error('Failed to create productLineItem from Klarna order line');
                 }
 
                 if (product.optionProduct) {
@@ -291,7 +294,16 @@ function restoreLineItems(basket, klarnaOrderObj) {
             if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
                 var campaignBased = true;
                 var couponCode = orderLine.merchant_data;
-                basket.createCouponLineItem(couponCode, campaignBased);
+
+                try {
+                    basket.createCouponLineItem(couponCode, campaignBased);
+                } catch (e) {
+                    if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
+                        Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
+                    } else {
+                        throw new Error(e.message);
+                    }
+                }
             }
 
             if (orderLine.type === ORDER_LINE_TYPE.GIFT_CARD && orderLine.merchant_data) {

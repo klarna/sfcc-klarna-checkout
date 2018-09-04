@@ -1,4 +1,4 @@
-/* globals session:false */
+/* globals session:false, APIException:false */
 
 'use strict';
 
@@ -52,16 +52,20 @@ var KlarnaCartModel = CartModel.extend({
         this.removeAllPaymentInstruments();
 
         var productLineItems = this.getProductLineItems();
-        var productLineItem;
         for (var m = 0; m < productLineItems.length; m++) {
-            productLineItem = productLineItems[m];
+            var productLineItem = productLineItems[m];
             this.removeProductLineItem(productLineItem);
         }
 
+        var couponLineItems = this.getCouponLineItems();
+        for (var c = 0; c < couponLineItems.length; c++) {
+            var couponLineItem = couponLineItems[c];
+            this.removeCouponLineItem(couponLineItem);
+        }
+
         var shipments = this.getShipments();
-        var shipment;
         for (var l = 0; l < shipments.length; l++) {
-            shipment = shipments[l];
+            var shipment = shipments[l];
 
             if (!shipment.isDefault()) {
                 this.removeShipment(shipment);
@@ -69,9 +73,8 @@ var KlarnaCartModel = CartModel.extend({
         }
 
         var giftLineItems = this.getGiftCertificateLineItems();
-        var giftLineItem;
         for (var g = 0; g < giftLineItems.length; g++) {
-            giftLineItem = giftLineItems[g];
+            var giftLineItem = giftLineItems[g];
             this.removeGiftCertificateLineItem(giftLineItem);
         }
 
@@ -139,7 +142,17 @@ var KlarnaCartModel = CartModel.extend({
                 if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
                     var campaignBased = true;
                     var couponCode = orderLine.merchant_data;
-                    this.createCouponLineItem(couponCode, campaignBased);
+
+                    try {
+                        this.createCouponLineItem(couponCode, campaignBased);
+                    } catch (e) {
+                        if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
+                            var Logger = require('dw/system/Logger');
+                            Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
+                        } else {
+                            throw new Error(e.message);
+                        }
+                    }
                 }
 
                 if (orderLine.type === ORDER_LINE_TYPE.GIFT_CARD && orderLine.merchant_data) {
