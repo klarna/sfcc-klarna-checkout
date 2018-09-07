@@ -166,7 +166,14 @@
                 item.product_identifiers.category_path = categoryPath;
             }
 
-            if (li.bonusProductLineItem) {
+            if (li.custom.bonusProductLineItemUUID && li.custom.bonusProductLineItemUUID !== 'bonus') {
+                for (var p = 0; p < items.length; p++) {
+                    var pli = items[p];
+                    if (pli.UUID === li.custom.bonusProductLineItemUUID) {
+                        item.merchant_data = pli.productID + '__' + pli.position.toFixed(0);
+                    }
+                }
+            } else if (li.bonusProductLineItem) {
                 item.merchant_data = ORDER_LINE_TYPE.BONUS_PRODUCT;
             }
 

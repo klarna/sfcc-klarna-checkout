@@ -265,6 +265,7 @@ function restoreLineItems(basket, klarnaOrderObj) {
     var klarnaOrderLines = klarnaOrderObj.order_lines;
     var shipment = basket.getDefaultShipment();
     var product = null;
+    var bonusProducts = [];
 
     if (klarnaOrderLines && klarnaOrderLines.length > 0) {
         for (var i = 0; i < klarnaOrderLines.length; i++) {
@@ -283,7 +284,18 @@ function restoreLineItems(basket, klarnaOrderObj) {
                 }
 
                 if (!orderLine.merchant_data || orderLine.merchant_data !== ORDER_LINE_TYPE.BONUS_PRODUCT) {
-                    basket.createProductLineItem(product, productOptionModel, shipment).setQuantityValue(orderLine.quantity);
+                    var createdProductLineItem = basket.createProductLineItem(product, productOptionModel, shipment);
+                    createdProductLineItem.setQuantityValue(orderLine.quantity);
+
+                    if (orderLine.merchant_data && orderLine.merchant_data !== ORDER_LINE_TYPE.BONUS_PRODUCT && createdProductLineItem) {
+                        var AmountDiscount = require('dw/campaign/AmountDiscount');
+                        var discount = new AmountDiscount(product.priceModel.price.multiply(orderLine.quantity).getValueOrNull());
+                        var promoID = 'DiscountBonusProductPriceAdjustment';
+                        createdProductLineItem.createPriceAdjustment(promoID, discount);
+                        var bonusProductObj = {};
+                        bonusProductObj[orderLine.merchant_data] = createdProductLineItem;
+                        bonusProducts.push(bonusProductObj);
+                    }
                 }
             }
 
@@ -313,6 +325,23 @@ function restoreLineItems(basket, klarnaOrderObj) {
                 gc.setMessage(giftData.message);
                 gc.setSenderName(giftData.senderName);
                 gc.setRecipientName(giftData.recipientName);
+            }
+        }
+
+        if (bonusProducts.length > 0) {
+            var basketProducts = basket.getAllProductLineItems().iterator();
+            while (basketProducts.hasNext()) {
+                var pli = basketProducts.next();
+                var key = pli.productID + '__' + pli.position.toFixed(0);
+                for (var it = 0; it < bonusProducts.length; it++) {
+                    var pliObj = bonusProducts[it];
+                    if (pliObj[key]) {
+                        pli.custom.bonusProductLineItemUUID = 'bonus';
+                        pli.custom.preOrderUUID = pli.UUID;
+                        var bonusDiscountItem = pliObj[key];
+                        bonusDiscountItem.custom.bonusProductLineItemUUID = pli.UUID;
+                    }
+                }
             }
         }
     } else {
