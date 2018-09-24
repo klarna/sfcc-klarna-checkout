@@ -1,0 +1,11 @@
+<isscript>var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;</isscript>
+
+<div class="payment-details">
+    <isloop items="${pdict.order.billing.payment.selectedPaymentInstruments}" var="payment">
+        <isif condition="${payment.paymentMethod === 'CREDIT_CARD'}">
+            <isinclude template="checkout/billing/paymentOptions/creditCardSummary" />
+        <iselseif condition="${payment.paymentMethod === KLARNA_PAYMENT_METHOD}" />
+            ${Resource.msg('klarna.checkout.displayName','checkout','')}
+        </isif>
+    </isloop>
+</div>

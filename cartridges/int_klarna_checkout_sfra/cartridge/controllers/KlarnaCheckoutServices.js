@@ -158,12 +158,16 @@ server.post('Notification', server.middleware.https, function (req, res) {
     var klarnaOrderObject = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
 
     if (klarnaOrderObject) {
-        KlarnaHelpers.placeOrder({
-            klarnaOrderObject: klarnaOrderObject,
-            localeObject: localeObject,
-            isPendingOrder: true,
-            localeId: req.locale.id
-        });
+        if (klarnaFraudDecisionObject.event_type === 'FRAUD_RISK_STOPPED') {
+            KlarnaHelpers.handleStoppedOrders(klarnaOrderObject.merchant_reference1);
+        } else {
+            KlarnaHelpers.placeOrder({
+                klarnaOrderObject: klarnaOrderObject,
+                localeObject: localeObject,
+                isPendingOrder: true,
+                localeId: req.locale.id
+            });
+        }
     }
 
     res.setStatusCode(200);
