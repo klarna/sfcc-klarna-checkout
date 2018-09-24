@@ -56,6 +56,45 @@ function prepareShipping(shippingAddress) {
 }
 
 /**
+ * Handles fraud risk stopped orders.
+ *
+ * @param {string} orderNo the SFCC order number
+ * @return {void}
+ */
+function handleStoppedOrders(orderNo) {
+    var order = OrderMgr.getOrder(orderNo);
+
+    if (!order) {
+        return;
+    }
+
+    Transaction.wrap(function () {
+        order.addNote('Klarna Payment Notification', 'FRAUD_RISK_STOPPED - The order was stopped for some reason');
+        var paymentInstrument = order.getPaymentInstruments(KLARNA_PAYMENT_METHOD)[0];
+        if (paymentInstrument) {
+            paymentInstrument.paymentTransaction.custom.kcFraudStatus = FRAUD_STATUS.STOPPED;
+        }
+    });
+
+    if (order.status.value === Order.ORDER_STATUS_CREATED) {
+        Transaction.wrap(function () {
+            OrderMgr.failOrder(order);
+        });
+        return;
+    }
+
+    if (order.confirmationStatus.value === Order.CONFIRMATION_STATUS_CONFIRMED && order.exportStatus.value === Order.EXPORT_STATUS_READY && order.paymentStatus.value === Order.PAYMENT_STATUS_NOTPAID) {
+        Transaction.wrap(function () {
+            OrderMgr.cancelOrder(order);
+            order.setCancelDescription('The order was stopped by Klarna for some reason.');
+            order.setExportStatus(Order.EXPORT_STATUS_NOTEXPORTED);
+        });
+    } else if (order.confirmationStatus.value === Order.CONFIRMATION_STATUS_CONFIRMED && (order.exportStatus.value === Order.EXPORT_STATUS_EXPORTED || order.paymentStatus.value === Order.PAYMENT_STATUS_PAID)) {
+        Logger.getLogger('Klarna').fatal('Klarna payment notification for order {0}: FRAUD_RISK_STOPPED - The order was stopped for some reason', orderNo);
+    }
+}
+
+/**
  * Start the Klarna Checkout process
  * @param {Object} context page context
  */
@@ -460,11 +499,15 @@ function notification() {
     var klarnaOrderObject = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
 
     if (klarnaOrderObject) {
-        KlarnaPlaceOrderController.Start({ // eslint-disable-line new-cap
-            klarnaOrderObject: klarnaOrderObject,
-            localeObject: localeObject,
-            isPendingOrder: true
-        });
+        if (klarnaFraudDecisionObject.event_type === 'FRAUD_RISK_STOPPED') {
+            handleStoppedOrders(klarnaOrderObject.merchant_reference1);
+        } else {
+            KlarnaPlaceOrderController.Start({ // eslint-disable-line new-cap
+                klarnaOrderObject: klarnaOrderObject,
+                localeObject: localeObject,
+                isPendingOrder: true
+            });
+        }
     }
 
     response.setStatus(200);
