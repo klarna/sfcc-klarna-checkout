@@ -1,0 +1,59 @@
+/**
+ * Handles Klarna Fraud Status
+ * 
+ * @input KlarnaFraudStatus : String
+ * @input isPendingOrder : Boolean
+ * @output OrderInReview : Boolean
+ * @output OrderApproved : Boolean
+ * @output OrderFraudStatus : String
+ *
+ */
+
+var Logger = require('dw/system/Logger');
+var FRAUD_STATUS = require('../util/KlarnaConstants.js').FRAUD_STATUS;
+
+function execute( args : PipelineDictionary ) : Number
+{
+
+	var klarnaFraudStatus = args.KlarnaFraudStatus;
+	var isPendingOrder = (args.isPendingOrder === true);
+
+	if (klarnaFraudStatus === FRAUD_STATUS.ACCEPTED) {
+
+		if (isPendingOrder) {
+			args.OrderFraudStatus = FRAUD_STATUS.ACCEPTED_AFTER_REVIEW;
+		} else {
+			args.OrderFraudStatus = FRAUD_STATUS.ACCEPTED;
+		}
+
+		args.OrderInReview = false;
+		args.OrderApproved = true;
+
+		return PIPELET_NEXT;
+	}
+
+	if (klarnaFraudStatus === FRAUD_STATUS.PENDING) {
+		args.OrderFraudStatus = FRAUD_STATUS.PENDING;
+		args.OrderInReview = true;
+		args.OrderApproved = false;
+
+		return PIPELET_NEXT;
+	}
+
+	if (klarnaFraudStatus === FRAUD_STATUS.REJECTED) {
+
+		if (isPendingOrder) {
+			args.OrderFraudStatus = FRAUD_STATUS.REJECTED_AFTER_REVIEW;
+		} else {
+			args.OrderFraudStatus = FRAUD_STATUS.REJECTED;
+		}
+
+		args.OrderInReview = false;
+		args.OrderApproved = false;
+
+		return PIPELET_NEXT;
+	}
+	
+	Logger.getLogger('Klarna').error('Unknown Klarna Fraud Status');
+    return PIPELET_ERROR;
+}

@@ -1,0 +1,26 @@
+<div class="row leading-lines shipping-method-list">
+    <isloop items="${pdict.applicableShippingMethods}" var="shippingMethod" status="loopSate">
+        <div class="form-check col-9 start-lines">
+            <isif condition="${shippingMethod.selected}">
+                <input
+                    id="shippingMethod-${shippingMethod.ID}"
+                    name="shipping_method"
+                    type="radio" class="form-check-input"
+                    value="${shippingMethod.ID}"
+                    data-pickup="${shippingMethod.storePickupEnabled}"
+                    checked>
+                <iselse/>
+                <input id="shippingMethod-${shippingMethod.ID}" name="shipping_method" type="radio" value="${shippingMethod.ID}" class="form-check-input">
+            </isif>
+            <label class="form-check-label shipping-method-option" for="shippingMethod-${shippingMethod.ID}">
+                <span class="display-name">${shippingMethod.displayName}</span>
+                <isif condition="${shippingMethod.estimatedArrivalTime}">
+                    <span class="text-muted arrival-time">(${shippingMethod.estimatedArrivalTime})</span>
+                </isif>
+            </label>
+        </div>
+        <div class="col-3 text-right shipping-method-pricing end-lines">
+            <span class="shipping-cost"><isprint value="${shippingMethod.shippingCost}"/></span>
+        </div>
+    </isloop>
+</div>

@@ -1,0 +1,101 @@
+<iscomment>
+	This template is used to display Klarna Checkout
+</iscomment>
+
+<isdecorate template="common/layout/checkout">
+
+    <isscript>
+        var assets = require('*/cartridge/scripts/assets.js');
+        assets.addJs('/js/klarna-checkout.js');
+    </isscript>
+
+    <h1 class="page-title">
+        ${Resource.msg('title.checkout','checkout',null)}
+    </h1>
+
+    <div id="checkout-main" class="container data-checkout-stage"
+         data-update-klarna="${URLUtils.https('KlarnaCheckoutServices-UpdateCheckout').toString()}"
+         data-select-shipping="${URLUtils.https('KlarnaCheckoutShippingServices-SelectShippingMethod').toString()}"
+         data-update-address="${URLUtils.https('KlarnaCheckoutShippingServices-UpdateShippingAddress').toString()}">
+
+        <div class="row">
+            <div class="col-sm-7">
+
+                <isif condition="${pdict.placeOrderError != null}">
+                    <div class="alert alert-danger error-message" role="alert">
+                        <p class="error-message-text">${pdict.placeOrderError}</p>
+                    </div>
+                </isif>
+
+                <isif condition="${pdict.localeObject.custom.showShippingOptions !== true}" >
+                    <div class="card">
+                         <div class="card-header">
+                            <h4 class="pull-left">${Resource.msg('heading.shipping.method', 'checkout', null)}</h4>
+                        </div>
+                        <div class="card-body">
+                            <div id="shipping-method-list" data-update-shippingmethods="${URLUtils.https('KlarnaCheckoutShippingServices-UpdateShippingMethodList').toString()}">
+                                <isinclude url="${URLUtils.url('KlarnaCheckoutShippingServices-UpdateShippingMethodList')}"/>
+                            </div>
+                        </div>
+                    </div>
+                </isif>
+
+				<iscomment>
+	                <isif condition="${dw.order.PaymentMgr.getPaymentMethod(dw.order.PaymentInstrument.METHOD_GIFT_CERTIFICATE).isActive() && pdict.basket.giftCertificateLineItems.size() == 0}" >
+                        <div class="card">
+	                	    <isinclude template="checkout/klarnaGiftCertificates"/>
+                        </div>
+	                </isif>
+				</iscomment>
+
+                <div class="card">
+                    <isif condition="${!empty(pdict.klarnaError)}">
+                        <div class="card-header">
+                            <h4 class="pull-left">${Resource.msg('klarna.checkout.displayName','checkout','')}</h4>
+                        </div>
+                        <div class="card-body">
+                            <h4 class="errorMsg" >${pdict.klarnaError}</h4>
+                        </div>
+                    <iselseif condition="${!empty(pdict.checkoutSnippet)}">
+                        <input id="klarnaCheckoutSnippet" type="hidden" value="${pdict.checkoutSnippet}" />
+                        <div id="klarna-checkout"></div>
+                        <script>
+                            var klarnaCheckoutCont = document.getElementById('klarna-checkout');
+                            klarnaCheckoutCont.innerHTML = document.getElementById('klarnaCheckoutSnippet').value;
+                            var scriptsTags = klarnaCheckoutCont.getElementsByTagName('script')
+                            // This is necessary otherwise the scripts tags are not going to be evaluated
+                            for (var i = 0; i < scriptsTags.length; i++) {
+                                var parentNode = scriptsTags[i].parentNode
+                                var newScriptTag = document.createElement('script')
+                                newScriptTag.type ='text/javascript'
+                                newScriptTag.text = scriptsTags[i].text
+                                parentNode.removeChild(scriptsTags[i])
+                                parentNode.appendChild(newScriptTag)
+                            }
+                        </script>
+
+                        <input name="klarna_total" value="${(pdict.basket.getAdjustedMerchandizeTotalPrice(true).value*100).toFixed(0)}" type="hidden" />
+                    </isif>
+                </div>
+            </div>
+        
+            <!----------------------------------------------------------------------------------->
+            <!-- Order Totals, Details and Summary -->
+            <!----------------------------------------------------------------------------------->
+            <div class="col-sm-5">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h4>${Resource.msg('heading.order.summary', 'checkout', null)}</h4>
+                    </div>
+                    <div class="card-body order-total-summary">
+                        <isinclude template="checkout/orderTotalSummary" />
+                    </div>
+                </div>
+
+                <isinclude template="checkout/orderProductSummary" />
+            </div>
+        </div>
+    </div>
+
+</isdecorate>
