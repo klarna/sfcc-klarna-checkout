@@ -18,6 +18,7 @@ server.replace('Confirm', server.middleware.https, function (req, res, next) {
     var OrderModel = require('*/cartridge/models/order');
     var Logger = require('dw/system/Logger');
     var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+    var reportingUrlsHelper = require('*/cartridge/scripts/reportingUrls');
 
     var clearBasket = function () {
         var currentBasket = BasketMgr.getCurrentBasket();
@@ -79,11 +80,14 @@ server.replace('Confirm', server.middleware.https, function (req, res, next) {
             { config: config, countryCode: currentLocale.country, containerView: 'order' }
         );
 
+        var reportingURLs = reportingUrlsHelper.getOrderReportingURLs(placeOrderResult.order);
+
         res.render('checkout/klarnaConfirmation', {
             CurrentPageMetaData: {
                 title: 'Klarna Confirmation'
             },
             order: orderModel,
+            reportingURLs: reportingURLs,
             confirmationSnippet: placeOrderResult.confirmationSnippet
         });
     }
