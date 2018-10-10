@@ -27,7 +27,7 @@
     * @returns {void}
     */
     function calculateBasket(basket) {
-        HookMgr.callHook('dw.ocapi.shop.basket.calculate', 'calculate', basket);
+        HookMgr.callHook('dw.order.calculate', 'calculate', basket);
     }
 
     /**
