@@ -42,14 +42,14 @@ var ProductList = app.getModel('ProductList');
 var CartModel = AbstractModel.extend({
     /** @lends module:models/CartModel~CartModel.prototype */
     /**
-     * Triggers the cart calculation by executing the hook 'dw.ocapi.shop.basket.calculate'.
+     * Triggers the cart calculation by executing the hook 'dw.order.calculate'.
      *
      * @transactional
      * @alias module:models/CartModel~CartModel/calculate
      * @return {dw.system.Status} Returns OK if cart when the cart is recalculated.
      */
     calculate: function () {
-        dw.system.HookMgr.callHook('dw.ocapi.shop.basket.calculate', 'calculate', this.object);
+        dw.system.HookMgr.callHook('dw.order.calculate', 'calculate', this.object);
     },
 
     addProductToCart: function() {
