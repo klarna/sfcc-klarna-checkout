@@ -1,6 +1,5 @@
 node_modules/
 coverage/
-cartridges/*/cartridge/static/
 npm-debug.log
 cartridges.zip
 .idea/
