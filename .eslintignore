@@ -1,2 +1,4 @@
-Makefile.js
-cartridges/plugin_applepay/cartridge/static/**/*.js
+cartridges/int_klarna_checkout_sfra/cartridge/static/
+coverage/
+doc/
+bin/

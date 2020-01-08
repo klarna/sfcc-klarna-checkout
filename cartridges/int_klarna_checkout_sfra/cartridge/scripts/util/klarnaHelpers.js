@@ -6,12 +6,12 @@
  * @module util/klarnaHelpers
  */
 
- /* API Includes */
+/* API Includes */
 var ProductMgr = require('dw/catalog/ProductMgr');
 var PaymentMgr = require('dw/order/PaymentMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
-var ORDER_LINE_TYPE = require('~/cartridge/scripts/util/klarnaConstants').ORDER_LINE_TYPE;
-var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
+var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/klarnaConstants').ORDER_LINE_TYPE;
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
 var CustomObjectMgr = require('dw/object/CustomObjectMgr');
 var Money = require('dw/value/Money');
 var Logger = require('dw/system/Logger');
@@ -21,12 +21,14 @@ var Transaction = require('dw/system/Transaction');
 var HookMgr = require('dw/system/HookMgr');
 var OrderMgr = require('dw/order/OrderMgr');
 var Order = require('dw/order/Order');
+var AmountDiscount = require('dw/campaign/AmountDiscount');
+
 
 /* Script Modules */
 var COHelpers = require('*/cartridge/scripts/checkout/checkoutHelpers');
 var BasketCalculationHelpers = require('*/cartridge/scripts/helpers/basketCalculationHelpers');
 var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
-var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
 
 /**
  * Get Klarna locale object
@@ -67,12 +69,12 @@ function getLocaleObject(country, localeID) {
 function calculateNonGiftCertificateAmount(lineItemCtnr) {
     var giftCertTotal = new Money(0.0, lineItemCtnr.currencyCode);
 
-	// get the list of all gift certificate payment instruments
+    // get the list of all gift certificate payment instruments
     var gcPaymentInstrs = lineItemCtnr.getGiftCertificatePaymentInstruments();
     var iter = gcPaymentInstrs.iterator();
     var orderPI = null;
 
-	// sum the total redemption amount
+    // sum the total redemption amount
     while (iter.hasNext()) {
         orderPI = iter.next();
         giftCertTotal = giftCertTotal.add(orderPI.getPaymentTransaction().getAmount());
@@ -123,8 +125,8 @@ function calculatePaymentTransactionTotals(basket) {
         return true;
     }
 
-	// calculate the amount to be charged for the
-	// non-gift certificate payment instrument
+    // calculate the amount to be charged for the
+    // non-gift certificate payment instrument
     var amount = calculateNonGiftCertificateAmount(basket);
 
     // now set the non-gift certificate payment instrument total.
@@ -288,7 +290,6 @@ function restoreLineItems(basket, klarnaOrderObj) {
                     createdProductLineItem.setQuantityValue(orderLine.quantity);
 
                     if (orderLine.merchant_data && orderLine.merchant_data !== ORDER_LINE_TYPE.BONUS_PRODUCT && createdProductLineItem) {
-                        var AmountDiscount = require('dw/campaign/AmountDiscount');
                         var discount = new AmountDiscount(product.priceModel.price.multiply(orderLine.quantity).getValueOrNull());
                         var promoID = 'DiscountBonusProductPriceAdjustment';
                         createdProductLineItem.createPriceAdjustment(promoID, discount);
@@ -304,16 +305,19 @@ function restoreLineItems(basket, klarnaOrderObj) {
             }
 
             if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
-                var campaignBased = true;
-                var couponCode = orderLine.merchant_data;
+                var merchantData = JSON.parse(orderLine.merchant_data);
+                if (merchantData.couponCode) {
+                    var campaignBased = true;
+                    var couponCode = merchantData.couponCode;
 
-                try {
-                    basket.createCouponLineItem(couponCode, campaignBased);
-                } catch (e) {
-                    if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
-                        Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
-                    } else {
-                        throw new Error(e.message);
+                    try {
+                        this.createCouponLineItem(couponCode, campaignBased);
+                    } catch (e) {
+                        if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
+                            Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
+                        } else {
+                            throw new Error(e.message);
+                        }
                     }
                 }
             }
@@ -439,6 +443,60 @@ function restoreShipment(basket, klarnaOrderObj) {
 }
 
 /**
+ * @param  {Object} klarnaOrderObj the Klarna order
+ * @return {void}
+ */
+function setSourceCode(klarnaOrderObj) {
+    if (klarnaOrderObj.merchant_data) {
+        var sourceCode = klarnaOrderObj.merchant_data;
+        session.setSourceCode(sourceCode);
+    }
+}
+
+/**
+ * @param  {dw.order.Basket} basket the current basket
+ * @param  {Object} klarnaOrderObj the Klarna order
+ * @return {void}
+ */
+function restoreCustomerBasedPromotions(basket, klarnaOrderObj) {
+    var klarnaOrderLines = klarnaOrderObj.order_lines;
+
+    for (var i = 0; i < klarnaOrderLines.length; i++) {
+        var orderLine = klarnaOrderLines[i];
+        if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
+            var merchantData = JSON.parse(orderLine.merchant_data);
+            if (merchantData.basedOnCustomerGroups) {
+                var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/klarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+                var discountAmount = Math.abs(orderLine.unit_price / 100);
+                var discount = new AmountDiscount(discountAmount);
+
+                if (orderLine.reference.substring(0, KLARNA_CUSTOMER_GROUPS_ADJUSTMENT.length) === KLARNA_CUSTOMER_GROUPS_ADJUSTMENT) {
+                    // order adjustment
+                    var orderPromotionID = orderLine.reference.split(KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_')[1];
+                    if (!basket.getPriceAdjustmentByPromotionID(orderPromotionID)) {
+                        basket.createPriceAdjustment(orderLine.reference, discount);
+                    }
+                } else {
+                    // product adjustment
+                    var pli = basket.getAllProductLineItems();
+                    for (var pi = 0; pi < pli.length; pi++) {
+                        var li = pli[pi];
+                        var divider = li.productID + '_';
+                        if (orderLine.reference.substring(0, divider.length) === divider) {
+                            var adjustmetID = orderLine.reference.split(divider)[1];
+                            var promotionID = adjustmetID.split(KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_')[1];
+                            if (!li.getPriceAdjustmentByPromotionID(promotionID)) {
+                                li.createPriceAdjustment(adjustmetID, discount);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
  * @param  {dw.order.Basket} basket the current basket
  * @param  {Object} klarnaOrderObj the Klarna order
  * @return {void}
@@ -446,13 +504,15 @@ function restoreShipment(basket, klarnaOrderObj) {
 function restoreBasket(basket, klarnaOrderObj) {
     clearBasket(basket);
     setCurrency(basket, klarnaOrderObj);
+    setSourceCode(klarnaOrderObj);
     restoreBillingAddress(basket, klarnaOrderObj);
     setEmail(basket, klarnaOrderObj);
     restoreLineItems(basket, klarnaOrderObj);
     restoreShipment(basket, klarnaOrderObj);
+    BasketCalculationHelpers.calculateTotals(basket);
+    restoreCustomerBasedPromotions(basket, klarnaOrderObj);
 
     if (PaymentMgr.getPaymentMethod(PaymentInstrument.METHOD_GIFT_CERTIFICATE).isActive()) {
-        BasketCalculationHelpers.calculateTotals(basket);
         restoreBasketGiftCards(basket, klarnaOrderObj);
     }
 
@@ -499,6 +559,19 @@ function setOrderCustomer(order, customerNo) {
 }
 
 /**
+ * Compares totals in Klarna and SFCC orders
+ *
+ * @param {Object} klarnaOrderObject - Klarna order
+ * @param  {dw.order.Basket} basket - SFCC basket
+ * @return  {boolean} if both order totals are equal
+ */
+function areKlarnaAndSfccTotalsEqual(klarnaOrderObject, basket) {
+    var klarnaOrderTotal = Math.round(klarnaOrderObject.order_amount);
+    var sfccOrderAmount = Math.round(calculateNonGiftCertificateAmount(basket).value * 100);
+    return sfccOrderAmount === klarnaOrderTotal;
+}
+
+/**
  * Creates the order in SFCC
  *
  * @transactional
@@ -507,17 +580,20 @@ function setOrderCustomer(order, customerNo) {
  * @return  {dw.order.Order} order or null
  */
 function createOrder(klarnaOrderObject, localeObject) {
+    var hooksHelper = require('*/cartridge/scripts/helpers/hooks');
+
     var currentBasket = BasketMgr.getCurrentOrNewBasket();
 
     Transaction.wrap(function () {
         restoreBasket(currentBasket, klarnaOrderObject);
     });
 
-    var validationResult = HookMgr.callHook(
+    var validationResult = hooksHelper(
         'app.validate.basket',
         'validateBasket',
         currentBasket,
-        false
+        false,
+        require('*/cartridge/scripts/hooks/validateBasket').validateBasket
     );
 
     if (validationResult.error) {
@@ -529,6 +605,14 @@ function createOrder(klarnaOrderObject, localeObject) {
     }
 
     if (!currentBasket.billingAddress) {
+        return null;
+    }
+
+    // We are handling the case when you hit the checkout with a promotion applied.
+    // While at checkout, the promotion expires. However, Klarna has no way to know and
+    // that's where the two orders' totals start to diverge. Thus we fail to create the order
+    // and this will fail Klarna order validation upon order submit
+    if (!areKlarnaAndSfccTotalsEqual(klarnaOrderObject, currentBasket)) {
         return null;
     }
 
@@ -687,7 +771,7 @@ function placeOrder(context) {
 
     if (handlePaymentsResult.error) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,
@@ -696,7 +780,7 @@ function placeOrder(context) {
         });
     } else if (handlePaymentsResult.missingPaymentInfo) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,
@@ -705,7 +789,7 @@ function placeOrder(context) {
         });
     } else if (handlePaymentsResult.declined) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,
@@ -745,7 +829,7 @@ function placeOrder(context) {
  * @return {void}
  */
 function handleStoppedOrders(orderNo) {
-    var FRAUD_STATUS = require('~/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
+    var FRAUD_STATUS = require('*/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
     var order = OrderMgr.getOrder(orderNo);
 
     if (!order) {
@@ -762,7 +846,7 @@ function handleStoppedOrders(orderNo) {
 
     if (order.status.value === Order.ORDER_STATUS_CREATED) {
         Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
         });
         return;
     }

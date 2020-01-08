@@ -1,0 +1,16 @@
+<div class="kosm-cart">
+    <isscript>
+        var BasketMgr = require('dw/order/BasketMgr');
+        var currentBasket = BasketMgr.getCurrentBasket();
+        var totalGrossPrice = currentBasket.getTotalGrossPrice();
+        var KlarnaOSM = require('*/cartridge/scripts/marketing/osm');
+    </isscript>
+    <isif condition="${KlarnaOSM.isEnabledCartPage()}">
+        <klarna-placement data-id="${KlarnaOSM.getCartPagePlacementTagId()}" data-purchase_amount="${KlarnaOSM.formatPurchaseAmount(totalGrossPrice)}"></klarna-placement>
+
+        <isscript>
+            var assets = require('*/cartridge/scripts/assets.js');
+            assets.addJs(KlarnaOSM.getScriptURL());
+        </isscript>
+    </isif>
+</div>

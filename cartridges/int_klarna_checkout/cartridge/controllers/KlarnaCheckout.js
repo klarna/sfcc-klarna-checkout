@@ -6,8 +6,6 @@
  * @module controllers/KlarnaCheckout
 */
 
-var STOREFRONT_CARTRIDGE = require('~/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
-
 /* API Includes */
 var URLUtils = require('dw/web/URLUtils');
 var Site = require('dw/system/Site');
@@ -21,14 +19,14 @@ var PaymentInstrument = require('dw/order/PaymentInstrument');
 var HookMgr = require('dw/system/HookMgr');
 
 /* Script Modules */
-var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
-var guard = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/guard');
-var utils = require('~/cartridge/scripts/util/KlarnaHelper');
-var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
-var FRAUD_STATUS = require('~/cartridge/scripts/util/KlarnaConstants').FRAUD_STATUS;
-var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
-var KlarnaPlaceOrderController = require('~/cartridge/controllers/KlarnaPlaceOrder');
-var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+var app = require('*/cartridge/scripts/app');
+var guard = require('*/cartridge/scripts/guard');
+var utils = require('*/cartridge/scripts/util/KlarnaHelper');
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
+var FRAUD_STATUS = require('*/cartridge/scripts/util/KlarnaConstants').FRAUD_STATUS;
+var KlarnaCartModel = require('*/cartridge/scripts/models/KlarnaCartModel');
+var KlarnaPlaceOrderController = require('*/cartridge/controllers/KlarnaPlaceOrder');
+var KlarnaOrderService = require('*/cartridge/scripts/services/KlarnaOrderService');
 var TransientAddress = app.getModel('TransientAddress');
 
 
@@ -78,7 +76,7 @@ function handleStoppedOrders(orderNo) {
 
     if (order.status.value === Order.ORDER_STATUS_CREATED) {
         Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
         });
         return;
     }
@@ -114,7 +112,7 @@ function start(context) {
         return;
     }
 
-    var pageMeta = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/meta');
+    var pageMeta = require('*/cartridge/scripts/meta');
     pageMeta.update({
         pageTitle: 'Klarna Checkout'
     });
@@ -146,9 +144,9 @@ function start(context) {
     var klarnaOrderID = (klarnaCountry && localeObject.custom.country !== klarnaCountry) ? null : session.privacy.klarnaOrderID;
 
     if (!klarnaOrderID) {
-        checkoutSnippet = klarnaOrderService.createOrder(cart.object, localeObject);
+        checkoutSnippet = klarnaOrderService.createOrder(cart.object, localeObject, request.locale);
     } else {
-        checkoutSnippet = klarnaOrderService.updateOrder(cart.object, localeObject, klarnaOrderID);
+        checkoutSnippet = klarnaOrderService.updateOrder(cart.object, localeObject, klarnaOrderID, request.locale);
     }
 
     app.getView({
@@ -178,14 +176,14 @@ function update() {
         cart.restore(klarnaOrderObject);
     });
 
-    var KlarnaOrderUpdateResponseBuilder = require('~/cartridge/scripts/order/KlarnaOrderUpdateResponseBuilder');
+    var KlarnaOrderUpdateResponseBuilder = require('*/cartridge/scripts/order/KlarnaOrderUpdateResponseBuilder');
     var klarnaOrderUpdateResponseBuilder = new KlarnaOrderUpdateResponseBuilder();
     var orderUpdateResponse = klarnaOrderUpdateResponseBuilder.buildResponse({
         basket: cart.object,
         showShippingMethods: !!klarnaOrderObject.selected_shipping_option
     }).get();
 
-    var responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
+    var responseUtils = require('*/cartridge/scripts/util/Response');
     responseUtils.renderJSON(orderUpdateResponse);
 }
 
@@ -225,7 +223,7 @@ function showConfirmation(order, confirmationSnippet) {
         });
     }
 
-    var pageMeta = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/meta');
+    var pageMeta = require('*/cartridge/scripts/meta');
     pageMeta.update({
         pageTitle: 'Klarna Confirmation'
     });
@@ -317,12 +315,12 @@ function updateKlarnaCheckout() {
     var isUpdated;
 
     if (!session.privacy.klarnaOrderID) {
-        isUpdated = klarnaOrderService.createOrder(cart.object, localeObject);
+        isUpdated = klarnaOrderService.createOrder(cart.object, localeObject, request.locale);
     } else {
-        isUpdated = klarnaOrderService.updateOrder(cart.object, localeObject, session.privacy.klarnaOrderID);
+        isUpdated = klarnaOrderService.updateOrder(cart.object, localeObject, session.privacy.klarnaOrderID, request.locale);
     }
 
-    var responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
+    var responseUtils = require('*/cartridge/scripts/util/Response');
     if (!isUpdated) {
         responseUtils.renderJSON({ success: false });
     } else {
@@ -371,7 +369,7 @@ function push() {
  */
 function selectShippingMethod() {
     var cart = KlarnaCartModel.get();
-    var responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
+    var responseUtils = require('*/cartridge/scripts/util/Response');
 
     if (!cart) {
         responseUtils.renderJSON({ success: false });
@@ -410,7 +408,7 @@ function selectShippingMethod() {
 function updateShippingAddress() {
     var shippingAddress;
     var cart = KlarnaCartModel.get();
-    var responseUtils = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/util/Response');
+    var responseUtils = require('*/cartridge/scripts/util/Response');
 
     if (!cart) {
         responseUtils.renderJSON({ success: false });
@@ -423,7 +421,7 @@ function updateShippingAddress() {
         var countryCode = request.httpParameterMap.country.stringValue.toLowerCase();
         // Klarna JS API returns ISO3 country codes in this case, so we use map to get ISO2 country codes.
         if (countryCode && countryCode.length === 3) {
-            var countryCodesMap = require('~/cartridge/countryCodesMap');
+            var countryCodesMap = require('*/cartridge/countryCodesMap');
             countryCode = countryCodesMap[countryCode];
         }
 

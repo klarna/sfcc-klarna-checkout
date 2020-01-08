@@ -10,7 +10,6 @@ var collections = require('*/cartridge/scripts/util/collections');
  */
 function getAppliedPromotions(lineItem) {
     var priceAdjustments;
-
     if (lineItem.priceAdjustments.getLength() > 0) {
         priceAdjustments = collections.map(lineItem.priceAdjustments, function (priceAdjustment) {
             return {

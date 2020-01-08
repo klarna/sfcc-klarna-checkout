@@ -1,16 +1,17 @@
-/* global empty, dw */
+/* global empty, dw, session */
 /* eslint no-control-regex: 0 */
 
 (function () {
     'use strict';
 
-    var Builder = require('../util/Builder');
-    var ORDER_LINE_TYPE = require('../util/KlarnaConstants.js').ORDER_LINE_TYPE;
-    var CONTENT_TYPE = require('../util/KlarnaConstants.js').CONTENT_TYPE;
-    var KlarnaOrderModel = require('./KlarnaOrderModel').KlarnaOrderModel;
-    var LineItem = require('./KlarnaOrderModel').LineItem;
-    var ShippingOption = require('./KlarnaOrderModel').ShippingOption;
-    var CheckoutUtils = require('../checkout/Utils.ds');
+    var Builder = require('*/cartridge/scripts/util/KlarnaBuilder');
+    var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
+    var CONTENT_TYPE = require('*/cartridge/scripts/util/KlarnaConstants.js').CONTENT_TYPE;
+    var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/KlarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+    var KlarnaOrderModel = require('*/cartridge/scripts/order/KlarnaOrderModel').KlarnaOrderModel;
+    var LineItem = require('*/cartridge/scripts/order/KlarnaOrderModel').LineItem;
+    var ShippingOption = require('*/cartridge/scripts/order/KlarnaOrderModel').ShippingOption;
+    var CheckoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
     var ShippingMgr = require('dw/order/ShippingMgr');
     var Transaction = require('dw/system/Transaction');
     var URLUtils = require('dw/web/URLUtils');
@@ -42,7 +43,7 @@
             empty(params.basket.defaultShipment.shippingAddress) ||
             empty(params.localeObject) ||
             empty(params.localeObject.custom.country) ||
-            empty(params.localeObject.custom.klarnaLocale)) {
+            empty(params.siteLocaleId)) {
             throw new Error('Error when generating KlarnaOrderRequestBuilder. Not valid params.');
         }
     }
@@ -138,9 +139,22 @@
         for (var i = 0; i < adjusments.length; i++) {
             var adj = adjusments[i];
             var adjustment = new LineItem();
+            var merchantData = {};
             adjusmentPrice = (adj.grossPrice.available && (TaxMgr.taxationPolicy !== TaxMgr.TAX_POLICY_NET) ? adj.grossPrice.value : adj.netPrice.value) * 100;
             promoName = !empty(adj.promotion) && !empty(adj.promotion.name) ? adj.promotion.name : ORDER_LINE_TYPE.DISCOUNT;
             promoId = adj.promotionID;
+
+            if ((adj.promotion && adj.promotion.basedOnCustomerGroups && !(adj.promotion.customerGroups.length === 1 && (adj.promotion.customerGroups[0].ID === 'Everyone' || adj.promotion.customerGroups[0].ID === 'Unregistered')))
+                || (!adj.promotion && (adj.promotionID.substring(0, KLARNA_CUSTOMER_GROUPS_ADJUSTMENT.length) === KLARNA_CUSTOMER_GROUPS_ADJUSTMENT))
+                || (pid && adj.promotionID.substring(0, (pid + '_' + KLARNA_CUSTOMER_GROUPS_ADJUSTMENT).length) === (pid + '_' + KLARNA_CUSTOMER_GROUPS_ADJUSTMENT))) {
+                if (adj.promotion) {
+                    promoId = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_' + adj.promotionID;
+                } else {
+                    promoId = adj.promotionID;
+                }
+                promoId = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_' + adj.promotionID;
+                merchantData.basedOnCustomerGroups = true;
+            }
 
             // Include product ID with promotion ID if available
             if (!empty(pid)) {
@@ -152,12 +166,16 @@
                 promoId = oid + '_' + promoId;
             }
 
+            if (adj.couponLineItem) {
+                merchantData.couponCode = adj.couponLineItem.couponCode;
+            }
+
             adjustment.quantity = 1;
             adjustment.type = ORDER_LINE_TYPE.DISCOUNT;
-            adjustment.name = promoName.replace(/[^\x00-\x7F]/g, '');
+            adjustment.name = promoName;
             adjustment.reference = promoId;
             adjustment.unit_price = Math.round(adjusmentPrice);
-            adjustment.merchant_data = adj.couponLineItem ? adj.couponLineItem.couponCode : '';
+            adjustment.merchant_data = Object.keys(merchantData).length > 0 ? JSON.stringify(merchantData) : '';
             adjustment.tax_rate = ((TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) || adj.tax.value === 0) ? 0 : Math.round(adj.taxRate * 10000);
             adjustment.total_amount = adjustment.unit_price;
             adjustment.total_tax_amount = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) ? 0 : Math.round(adj.tax.value * 100);
@@ -203,7 +221,7 @@
             var item = new LineItem();
             item.quantity = li.quantityValue;
             item.type = itemType;
-            item.name = li.productName.replace(/[^\x00-\x7F]/g, '');
+            item.name = li.productName;
             item.reference = itemID;
             item.unit_price = Math.round(itemPrice / li.quantityValue);
             item.tax_rate = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) ? 0 : Math.round(li.taxRate * 10000);
@@ -259,10 +277,10 @@
 
         for (var i = 0; i < items.length; i++) {
             var li = items[i];
-            giftData.message = li.getMessage() ? li.getMessage().replace(/[^\x00-\x7F]/g, '') : '';
-            giftData.senderName = li.getSenderName().replace(/[^\x00-\x7F]/g, '');
+            giftData.message = li.getMessage() ? li.getMessage() : '';
+            giftData.senderName = li.getSenderName();
             giftData.recipientEmail = li.getRecipientEmail();
-            giftData.recipientName = li.getRecipientName().replace(/[^\x00-\x7F]/g, '');
+            giftData.recipientName = li.getRecipientName();
 
             itemPrice = (li.grossPrice.available && (TaxMgr.taxationPolicy !== TaxMgr.TAX_POLICY_NET) ? li.grossPrice.value : li.netPrice.value) * 100;
 
@@ -300,11 +318,27 @@
                 shipmentTaxRate = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) ? 0 : (shipment.shippingTotalTax.value / shipment.shippingTotalNetPrice.value) * 10000;
             }
 
+            var isCustomerGroupBasedAdj = false;
+            var shipmentPriceAdjustments = shipment.shippingPriceAdjustments.toArray();
+            if (shipmentPriceAdjustments.length > 0) {
+                for (var ai = 0; ai < shipmentPriceAdjustments.length; ai++) {
+                    var adj = shipmentPriceAdjustments[ai];
+
+                    if ((adj.promotion && adj.promotion.basedOnCustomerGroups && !(adj.promotion.customerGroups.length === 1 && (adj.promotion.customerGroups[0].ID === 'Everyone' || adj.promotion.customerGroups[0].ID === 'Unregistered')))) {
+                        isCustomerGroupBasedAdj = true;
+                    }
+                }
+            }
+
+            if (isCustomerGroupBasedAdj) {
+                throw new Error('Shipping class promotions, based on customer groups are currently not supprted by KCO.');
+            }
+
             if (!empty(shipment.shippingMethod)) {
                 var shippingLineItem = new LineItem();
                 shippingLineItem.quantity = 1;
                 shippingLineItem.type = ORDER_LINE_TYPE.SHIPPING_FEE;
-                shippingLineItem.name = shipment.shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '');
+                shippingLineItem.name = shipment.shippingMethod.displayName;
                 shippingLineItem.reference = shipment.shippingMethod.ID;
                 shippingLineItem.unit_price = Math.round(shipmentUnitPrice);
                 shippingLineItem.tax_rate = Math.round(shipmentTaxRate);
@@ -316,6 +350,24 @@
                 context.order_lines.push(shippingLineItem);
             }
         }
+    }
+
+    /**
+    * Builds klarna compatible locale (RFC 1766)
+    *
+    * @param {string} siteLocaleId - this is the current site locale id
+    * @returns {string} resulting locale
+    */
+    function buildKlarnaCompatibleLocale(siteLocaleId) {
+        var Locale = require('dw/util/Locale');
+        var currentLocale = Locale.getLocale(siteLocaleId);
+        var resultLocale = currentLocale.language;
+
+        if (currentLocale.country) {
+            resultLocale = resultLocale + '-' + currentLocale.country;
+        }
+
+        return resultLocale.toLowerCase();
     }
 
     /**
@@ -342,11 +394,13 @@
 
         var basket = params.basket;
         var localeObject = params.localeObject.custom;
+        var siteLocaleId = params.siteLocaleId;
 
         var requestBodyObject = this.init()
             .setCustomerReference(basket)
             .setOrderReferences()
-            .buildLocale(basket, localeObject)
+            .setSourceCode()
+            .buildLocale(basket, localeObject, siteLocaleId)
             .buildBilling(basket, localeObject)
             .buildOptions(localeObject)
             .buildGui()
@@ -393,6 +447,16 @@
         return this;
     };
 
+    KlarnaOrderRequestBuilder.prototype.setSourceCode = function () {
+        var sourceCodeInfo = session.getSourceCodeInfo();
+
+        if (sourceCodeInfo && sourceCodeInfo.code) {
+            this.context.merchant_data = sourceCodeInfo.code;
+        }
+
+        return this;
+    };
+
     KlarnaOrderRequestBuilder.prototype.buildBilling = function (basket, localeObject) {
         var currentCustomer = basket.getCustomer();
         var prefillCheckoutFields = Site.getCurrent().getCustomPreferenceValue('kcPrefillCheckoutFields');
@@ -417,12 +481,12 @@
         return this;
     };
 
-    KlarnaOrderRequestBuilder.prototype.buildLocale = function (basket, localeObject) {
+    KlarnaOrderRequestBuilder.prototype.buildLocale = function (basket, localeObject, siteLocaleId) {
         var currency = basket.getCurrencyCode();
 
         this.context.purchase_country = localeObject.country;
         this.context.purchase_currency = currency;
-        this.context.locale = localeObject.klarnaLocale;
+        this.context.locale = buildKlarnaCompatibleLocale(siteLocaleId);
 
         return this;
     };
@@ -589,7 +653,7 @@
 
                 var shippingOption = new ShippingOption();
                 shippingOption.id = shippingMethod.ID;
-                shippingOption.name = shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '');
+                shippingOption.name = shippingMethod.displayName;
                 shippingOption.description = shippingMethod.description;
                 shippingOption.price = Math.round(shippingMethodPrice);
                 shippingOption.tax_rate = 0;

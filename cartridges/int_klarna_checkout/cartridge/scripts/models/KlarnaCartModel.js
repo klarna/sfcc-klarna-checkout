@@ -6,7 +6,6 @@
  * @module models/KlarnaCartModel
  */
 
-var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
 var BasketMgr = require('dw/order/BasketMgr');
@@ -15,10 +14,11 @@ var PaymentMgr = require('dw/order/PaymentMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
 var HookMgr = require('dw/system/HookMgr');
 var Currency = require('dw/util/Currency');
+var AmountDiscount = require('dw/campaign/AmountDiscount');
 
-var ORDER_LINE_TYPE = require('~/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
-var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
-var CartModel = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/models/CartModel');
+var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
+var CartModel = require('*/cartridge/scripts/models/CartModel');
 
 /**
  * Cart helper providing enhanced cart functionality
@@ -32,19 +32,22 @@ var KlarnaCartModel = CartModel.extend({
     restore: function (klarnaOrderObj) {
         this.clear();
         this.setCurrency(klarnaOrderObj);
+        this.setSourceCode(klarnaOrderObj);
         this.restoreBillingAddress(klarnaOrderObj);
         this.setEmail(klarnaOrderObj);
         this.restoreLineItems(klarnaOrderObj);
         this.restoreShipment(klarnaOrderObj);
+        this.calculate();
+        this.restoreCustomerBasedPromotions(klarnaOrderObj);
 
         if (PaymentMgr.getPaymentMethod(PaymentInstrument.METHOD_GIFT_CERTIFICATE).isActive()) {
-            this.calculate();
             this.restoreBasketGiftCards(klarnaOrderObj);
         }
 
         HookMgr.callHook('app.payment.processor.' + KLARNA_PAYMENT_METHOD, 'Handle',
             this.object
         );
+
         this.calculate();
     },
 
@@ -88,6 +91,13 @@ var KlarnaCartModel = CartModel.extend({
             this.updateCurrency();
         } else {
             throw new Error('Could not set basket currency');
+        }
+    },
+
+    setSourceCode: function (klarnaOrderObj) {
+        if (klarnaOrderObj.merchant_data) {
+            var sourceCode = klarnaOrderObj.merchant_data;
+            session.setSourceCode(sourceCode);
         }
     },
 
@@ -140,17 +150,20 @@ var KlarnaCartModel = CartModel.extend({
                 }
 
                 if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
-                    var campaignBased = true;
-                    var couponCode = orderLine.merchant_data;
+                    var merchantData = JSON.parse(orderLine.merchant_data);
+                    if (merchantData.couponCode) {
+                        var campaignBased = true;
+                        var couponCode = merchantData.couponCode;
 
-                    try {
-                        this.createCouponLineItem(couponCode, campaignBased);
-                    } catch (e) {
-                        if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
-                            var Logger = require('dw/system/Logger');
-                            Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
-                        } else {
-                            throw new Error(e.message);
+                        try {
+                            this.createCouponLineItem(couponCode, campaignBased);
+                        } catch (e) {
+                            if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
+                                var Logger = require('dw/system/Logger');
+                                Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);
+                            } else {
+                                throw new Error(e.message);
+                            }
                         }
                     }
                 }
@@ -286,6 +299,44 @@ var KlarnaCartModel = CartModel.extend({
 
         // Creates a payment instrument from this gift certificate.
         return this.object.createGiftCertificatePaymentInstrument(giftCertificate.getGiftCertificateCode(), amountToRedeem);
+    },
+
+    restoreCustomerBasedPromotions: function (klarnaOrderObj) {
+        var klarnaOrderLines = klarnaOrderObj.order_lines;
+
+        for (var i = 0; i < klarnaOrderLines.length; i++) {
+            var orderLine = klarnaOrderLines[i];
+            if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
+                var merchantData = JSON.parse(orderLine.merchant_data);
+                if (merchantData.basedOnCustomerGroups) {
+                    var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/KlarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+                    var discountAmount = Math.abs(orderLine.unit_price / 100);
+                    var discount = new AmountDiscount(discountAmount);
+
+                    if (orderLine.reference.substring(0, KLARNA_CUSTOMER_GROUPS_ADJUSTMENT.length) === KLARNA_CUSTOMER_GROUPS_ADJUSTMENT) {
+                        // order adjustment
+                        var orderPromotionID = orderLine.reference.split(KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_')[1];
+                        if (!this.getPriceAdjustmentByPromotionID(orderPromotionID)) {
+                            this.createPriceAdjustment(orderLine.reference, discount);
+                        }
+                    } else {
+                        // product adjustment
+                        var pli = this.getAllProductLineItems();
+                        for (var pi = 0; pi < pli.length; pi++) {
+                            var li = pli[pi];
+                            var divider = li.productID + '_';
+                            if (orderLine.reference.substring(0, divider.length) === divider) {
+                                var adjustmetID = orderLine.reference.split(divider)[1];
+                                var promotionID = adjustmetID.split(KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_')[1];
+                                if (!li.getPriceAdjustmentByPromotionID(promotionID)) {
+                                    li.createPriceAdjustment(adjustmetID, discount);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 });
 

@@ -136,15 +136,15 @@ function KlarnaHttpService() {
 
             if (result.object) {
                 message = StringUtils.format('Response for request urlPath={0}, httpVerb={1}, requestBody=[{2}], responseBody=[{3}]',
-                            urlPath,
-                            httpVerb,
-                            requestBodyJson,
-                            JSON.stringify(result.object));
+                    urlPath,
+                    httpVerb,
+                    requestBodyJson,
+                    JSON.stringify(result.object));
             } else {
                 message = StringUtils.format('Response for EMPTY request urlPath={0}, httpVerb={1}, requestBody=[{2}]',
-                            urlPath,
-                            httpVerb,
-                            requestBodyJson);
+                    urlPath,
+                    httpVerb,
+                    requestBodyJson);
             }
 
             this.logger.info(message);

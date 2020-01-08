@@ -16,7 +16,7 @@ KlarnaApiContext.prototype.getFlowApiUrls = function () {
         this.flowApiUrls.put('updateMerchantReferences', '/ordermanagement/v1/orders/{0}/merchant-references');
         this.flowApiUrls.put('cancelOrder', '/ordermanagement/v1/orders/{0}/cancel');
         this.flowApiUrls.put('captureOrder', '/ordermanagement/v1/orders/{0}/captures');
-        this.flowApiUrls.put('vcnSettlement', '/merchantcard/v2/settlements');
+        this.flowApiUrls.put('vcnSettlement', '/merchantcard/v3/settlements');
     }
 
     return this.flowApiUrls;

@@ -4,11 +4,12 @@
 (function () {
     'use strict';
 
-    var Builder = require('../util/builder');
-    var ORDER_LINE_TYPE = require('../util/klarnaConstants.js').ORDER_LINE_TYPE;
-    var KlarnaOrderUpdateModel = require('./klarnaOrderUpdateModel').KlarnaOrderUpdateModel;
-    var LineItem = require('./klarnaOrderUpdateModel').LineItem;
-    var ShippingOption = require('./klarnaOrderUpdateModel').ShippingOption;
+    var Builder = require('*/cartridge/scripts/util/klarnaBuilder');
+    var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/klarnaConstants.js').ORDER_LINE_TYPE;
+    var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/klarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+    var KlarnaOrderUpdateModel = require('*/cartridge/scripts/order/klarnaOrderUpdateModel').KlarnaOrderUpdateModel;
+    var LineItem = require('*/cartridge/scripts/order/klarnaOrderUpdateModel').LineItem;
+    var ShippingOption = require('*/cartridge/scripts/order/klarnaOrderUpdateModel').ShippingOption;
     var ShippingMgr = require('dw/order/ShippingMgr');
     var TaxMgr = require('dw/order/TaxMgr');
     var Transaction = require('dw/system/Transaction');
@@ -48,7 +49,7 @@
     */
     function getProductCategoryPath(product) {
         var path;
-		// get category from products primary category
+        // get category from products primary category
         var category = product.primaryCategory;
 
         // get category from product master if not set at variant
@@ -84,9 +85,21 @@
         for (var i = 0; i < adjusments.length; i++) {
             var adj = adjusments[i];
             var adjustment = new LineItem();
+            var merchantData = {};
             adjusmentPrice = (adj.priceValue) * 100;
             promoName = !empty(adj.promotion) && !empty(adj.promotion.name) ? adj.promotion.name : ORDER_LINE_TYPE.DISCOUNT;
             promoId = adj.promotionID;
+
+            if ((adj.promotion && adj.promotion.basedOnCustomerGroups && !(adj.promotion.customerGroups.length === 1 && (adj.promotion.customerGroups[0].ID === 'Everyone' || adj.promotion.customerGroups[0].ID === 'Unregistered')))
+                || (!adj.promotion && (adj.promotionID.substring(0, KLARNA_CUSTOMER_GROUPS_ADJUSTMENT.length) === KLARNA_CUSTOMER_GROUPS_ADJUSTMENT))
+                || (pid && adj.promotionID.substring(0, (pid + '_' + KLARNA_CUSTOMER_GROUPS_ADJUSTMENT).length) === (pid + '_' + KLARNA_CUSTOMER_GROUPS_ADJUSTMENT))) {
+                if (adj.promotion) {
+                    promoId = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT + '_' + adj.promotionID;
+                } else {
+                    promoId = adj.promotionID;
+                }
+                merchantData.basedOnCustomerGroups = true;
+            }
 
             // Include product ID with promotion ID if available
             if (!empty(pid)) {
@@ -98,12 +111,16 @@
                 promoId = oid + '_' + promoId;
             }
 
+            if (adj.couponLineItem) {
+                merchantData.couponCode = adj.couponLineItem.couponCode;
+            }
+
             adjustment.quantity = 1;
             adjustment.type = ORDER_LINE_TYPE.DISCOUNT;
-            adjustment.name = promoName.replace(/[^\x00-\x7F]/g, '');
+            adjustment.name = promoName;
             adjustment.reference = promoId;
             adjustment.unit_price = Math.round(adjusmentPrice);
-            adjustment.merchant_data = adj.couponLineItem ? adj.couponLineItem.couponCode : '';
+            adjustment.merchant_data = Object.keys(merchantData).length > 0 ? JSON.stringify(merchantData) : '';
             adjustment.tax_rate = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET || adj.tax.value === 0) ? 0 : Math.round(adj.taxRate * 10000);
             adjustment.total_amount = adjustment.unit_price;
             adjustment.total_tax_amount = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) ? 0 : Math.round(adj.tax.value * 100);
@@ -149,7 +166,7 @@
             var item = new LineItem();
             item.quantity = li.quantityValue;
             item.type = itemType;
-            item.name = li.productName.replace(/[^\x00-\x7F]/g, '');
+            item.name = li.productName;
             item.reference = itemID;
             item.unit_price = Math.round(itemPrice / li.quantityValue);
             item.tax_rate = (TaxMgr.taxationPolicy === TaxMgr.TAX_POLICY_NET) ? 0 : Math.round(li.taxRate * 10000);
@@ -212,10 +229,10 @@
 
         for (var i = 0; i < items.length; i++) {
             var li = items[i];
-            giftData.message = li.getMessage() ? li.getMessage().replace(/[^\x00-\x7F]/g, '') : '';
-            giftData.senderName = li.getSenderName().replace(/[^\x00-\x7F]/g, '');
+            giftData.message = li.getMessage() ? li.getMessage() : '';
+            giftData.senderName = li.getSenderName();
             giftData.recipientEmail = li.getRecipientEmail();
-            giftData.recipientName = li.getRecipientName().replace(/[^\x00-\x7F]/g, '');
+            giftData.recipientName = li.getRecipientName();
 
             itemPrice = (li.priceValue) * 100;
 
@@ -257,7 +274,7 @@
                 var shippingLineItem = new LineItem();
                 shippingLineItem.quantity = 1;
                 shippingLineItem.type = ORDER_LINE_TYPE.SHIPPING_FEE;
-                shippingLineItem.name = shipment.shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '');
+                shippingLineItem.name = shipment.shippingMethod.displayName;
                 shippingLineItem.reference = shipment.shippingMethod.ID;
                 shippingLineItem.unit_price = Math.round(shipmentUnitPrice);
                 shippingLineItem.tax_rate = Math.round(shipmentTaxRate);
@@ -357,7 +374,7 @@
     };
 
     OrderUpdateResponseBuilder.prototype.buildTotalAmount = function (basket) {
-        var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+        var KlarnaHelpers = require('*/cartridge/scripts/util/klarnaHelpers');
 
         var orderAmount = KlarnaHelpers.calculateNonGiftCertificateAmount(basket).value * 100;
 
@@ -410,7 +427,7 @@
 
                 var shippingOption = new ShippingOption();
                 shippingOption.id = shippingMethod.ID;
-                shippingOption.name = shippingMethod.displayName ? shippingMethod.displayName.replace(/[^\x00-\x7F]/g, '') : null;
+                shippingOption.name = shippingMethod.displayName ? shippingMethod.displayName : null;
                 shippingOption.description = shippingMethod.description;
                 shippingOption.price = Math.round(shippingMethodPrice);
                 shippingOption.tax_rate = 0;

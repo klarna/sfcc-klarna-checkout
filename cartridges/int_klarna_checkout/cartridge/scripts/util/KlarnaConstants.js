@@ -20,16 +20,13 @@ var ORDER_LINE_TYPE = 	{
     GIFT_CARD: 'gift_card'
 };
 
-// Storefront cartridges names
-var STOREFRONT_CARTRIDGE = {
-    CORE: 'app_storefront_core',
-    CONTROLLERS: 'app_storefront_controllers' // change this with int_klarna_checkout, if you are NOT using controller-based SG
-};
 
 var CONTENT_TYPE = 'application/vnd.klarna.internal.emd-v2+json';
+
+var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = 'klarna_cgbp';
 
 module.exports.FRAUD_STATUS = FRAUD_STATUS;
 module.exports.PAYMENT_METHOD = PAYMENT_METHOD;
 module.exports.ORDER_LINE_TYPE = ORDER_LINE_TYPE;
-module.exports.STOREFRONT_CARTRIDGE = STOREFRONT_CARTRIDGE;
 module.exports.CONTENT_TYPE = CONTENT_TYPE;
+module.exports.KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;

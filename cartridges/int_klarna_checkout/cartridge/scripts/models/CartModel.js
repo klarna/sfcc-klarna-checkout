@@ -7,7 +7,6 @@
  * @module models/CartModel
  */
 
-var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
 var Transaction = require('dw/system/Transaction');
@@ -21,11 +20,11 @@ var PaymentInstrument = require('dw/order/PaymentInstrument');
 var Product = require('~/cartridge/scripts/models/ProductModel');
 var ProductInventoryMgr = require('dw/catalog/ProductInventoryMgr');
 var ProductListMgr = require('dw/customer/ProductListMgr');
-var QuantityLineItem = require('~/cartridge/scripts/models/QuantityLineItemModel');
+var QuantityLineItem = require('*/cartridge/scripts/models/QuantityLineItemModel');
 var Resource = require('dw/web/Resource');
 var ShippingMgr = require('dw/order/ShippingMgr');
 var StoreMgr = require('dw/catalog/StoreMgr');
-var TransientAddress = require('~/cartridge/scripts/models/TransientAddressModel');
+var TransientAddress = require('*/cartridge/scripts/models/TransientAddressModel');
 var UUIDUtils = require('dw/util/UUIDUtils');
 
 var lineItem;
@@ -285,17 +284,17 @@ var CartModel = AbstractModel.extend({
             var cart = this;
             var campaignBased = true;
             var addCouponToBasketResult;
-            
+
             try {
                 addCouponToBasketResult = Transaction.wrap(function () {
-                    return cart.object.createCouponLineItem(couponCode, campaignBased); 
+                    return cart.object.createCouponLineItem(couponCode, campaignBased);
                 });
             } catch (e) {
                 return {CouponStatus: e.errorCode};
             }
-            
+
             Transaction.wrap(function (){
-                cart.calculate();            	
+                cart.calculate();
             });
             return {CouponStatus: addCouponToBasketResult.statusCode};
         }
@@ -323,7 +322,7 @@ var CartModel = AbstractModel.extend({
      */
     addBonusProduct: function (bonusDiscountLineItem, product, selectedOptions, quantity) {
         // TODO: Should this actually be using the dw.catalog.ProductOptionModel.UpdateProductOptionSelections method instead?
-        var UpdateProductOptionSelections = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/cart/UpdateProductOptionSelections');
+        var UpdateProductOptionSelections = require('*/cartridge/scripts/cart/UpdateProductOptionSelections');
         var ScriptResult = UpdateProductOptionSelections.update({
             SelectedOptions: selectedOptions,
             Product: product
@@ -552,7 +551,7 @@ var CartModel = AbstractModel.extend({
      * @returns {Boolean} EnableCheckout
      */
     validateForCheckout: function () {
-        var ValidateCartForCheckout = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/cart/ValidateCartForCheckout');
+        var ValidateCartForCheckout = require('*/cartridge/scripts/cart/ValidateCartForCheckout');
         return ValidateCartForCheckout.validate({
             Basket: this.object,
             ValidateTax: false

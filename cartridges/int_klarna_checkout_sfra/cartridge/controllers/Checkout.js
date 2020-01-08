@@ -51,10 +51,11 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     var HookMgr = require('dw/system/HookMgr');
     var BasketMgr = require('dw/order/BasketMgr');
     var Resource = require('dw/web/Resource');
-    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
-    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+    var KlarnaHelpers = require('*/cartridge/scripts/util/klarnaHelpers');
+    var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
     var OrderModel = require('*/cartridge/models/order');
-    var KLARNA_PAYMENT_METHOD = require('~/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
+    var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
+    var hooksHelper = require('*/cartridge/scripts/helpers/hooks');
 
     var currentBasket = BasketMgr.getCurrentBasket();
     if (!currentBasket) {
@@ -90,11 +91,12 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
 
     var allValid = COHelpers.ensureValidShipments(currentBasket);
 
-    var validationBasketStatus = HookMgr.callHook(
+    var validationBasketStatus = hooksHelper(
         'app.validate.basket',
         'validateBasket',
         currentBasket,
-        false
+        false,
+        require('*/cartridge/scripts/hooks/validateBasket').validateBasket
     );
 
     if (validationBasketStatus.error) {
@@ -116,9 +118,9 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     var klarnaOrderID = (klarnaCountry && localeObject.custom.country !== klarnaCountry) ? null : req.session.privacyCache.get('klarnaOrderID');
 
     if (!klarnaOrderID) {
-        checkoutSnippet = klarnaOrderService.createOrder(currentBasket, localeObject);
+        checkoutSnippet = klarnaOrderService.createOrder(currentBasket, localeObject, req.locale.id);
     } else {
-        checkoutSnippet = klarnaOrderService.updateOrder(currentBasket, localeObject, klarnaOrderID);
+        checkoutSnippet = klarnaOrderService.updateOrder(currentBasket, localeObject, klarnaOrderID, req.locale.id);
     }
 
     var basketModel = new OrderModel(

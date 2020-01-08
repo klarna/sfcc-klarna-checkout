@@ -25,8 +25,11 @@ var STOREFRONT_CARTRIDGE = 'app_storefront_base';
 
 var CONTENT_TYPE = 'application/vnd.klarna.internal.emd-v2+json';
 
+var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = 'klarna_cgbp';
+
 module.exports.FRAUD_STATUS = FRAUD_STATUS;
 module.exports.PAYMENT_METHOD = PAYMENT_METHOD;
 module.exports.ORDER_LINE_TYPE = ORDER_LINE_TYPE;
 module.exports.STOREFRONT_CARTRIDGE = STOREFRONT_CARTRIDGE;
 module.exports.CONTENT_TYPE = CONTENT_TYPE;
+module.exports.KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;

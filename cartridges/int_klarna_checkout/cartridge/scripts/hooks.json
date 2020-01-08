@@ -9,10 +9,6 @@
 			"script": "./payment/processor/BASIC_CREDIT"
 		},
 		{
-			"name": "app.payment.processor.BASIC_GIFT_CERTIFICATE",
-			"script": "./payment/processor/BASIC_GIFT_CERTIFICATE"
-		},
-		{
 			"name": "app.payment.processor.KLARNA_CHECKOUT",
 			"script": "./payment/processor/KLARNA_CHECKOUT"
 		},

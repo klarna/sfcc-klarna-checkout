@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <type-extension type-id="PaymentTransaction">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="kcFraudStatus">
+                <display-name xml:lang="x-default">Fraud Status</display-name>
+                <description xml:lang="x-default">Fraud Status</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="custom">
+                <display-name xml:lang="x-default">custom</display-name>
+                <attribute attribute-id="kcFraudStatus"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+
+    <type-extension type-id="SitePreferences">
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="kcAdditionalCheckbox">
+                <display-name xml:lang="x-default">Additional checkbox</display-name>
+                <description xml:lang="x-default">Additional merchant defined checkbox. e.g. for Newsletter opt-in.</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcPaymentMode">
+                <display-name xml:lang="x-default">Klarna Checkout Payment Mode</display-name>
+                <type>enum-of-string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">AUTHORISE</display>
+                        <value>AUTHORISE</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">DIRECT CAPTURE</display>
+                        <value>DIRECT_CAPTURE</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcTitleMandatory">
+                <display-name xml:lang="x-default">Title mandatory</display-name>
+                <description xml:lang="x-default">If specified to No, title becomes optional. Only available for orders for country GB.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcShippingDetails">
+                <display-name xml:lang="x-default">Shipping details message</display-name>
+                <description xml:lang="x-default">A message that will be presented on the confirmation page under the headline "Delivery".</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcServiceName">
+                <display-name xml:lang="x-default">Klarna Checkout Service Name</display-name>
+                <description xml:lang="x-default">The service name used for the current site</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>klarna.http.defaultendpoint</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcPrefillCheckoutFields">
+                <display-name xml:lang="x-default">Prefill checkout fields for registered users</display-name>
+                <description xml:lang="x-default">Prefill checkout fields for registered users</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>true</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcTermsAndConditionsUrl">
+                <display-name xml:lang="x-default">Terms and Conditions URL</display-name>
+                <description xml:lang="x-default">The URL of the current site Terms and Conditions to be shown in Klarna Checkout</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>https://www.estore.com/terms.html</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcAllowSeparateShippingAddress">
+                <display-name xml:lang="x-default">Allow separate shipping and billing addresses</display-name>
+                <description xml:lang="x-default">If Yes, the consumer can enter different billing and shipping addresses in Klarna Checkout</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcRequireValidateCallbackSuccess">
+                <display-name xml:lang="x-default">Require validate callback success</display-name>
+                <description xml:lang="x-default">If Yes, validate callback must get a positive response to not stop purchase</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorButton">
+                <display-name xml:lang="x-default">Button color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#84bd00</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorButtonText">
+                <display-name xml:lang="x-default">Button text color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#FFFFFF</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorCheckbox">
+                <display-name xml:lang="x-default">Checkbox text color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#84bd00</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorCheckboxCheckmark">
+                <display-name xml:lang="x-default">Checkbox checkmark color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#FFFFFF</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorHeader">
+                <display-name xml:lang="x-default">Header color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#FFFFFF</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcColorLink">
+                <display-name xml:lang="x-default">Link color preference</display-name>
+                <description xml:lang="x-default">CSS hex color to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>#84bd00</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcGuiDisable_autofocus">
+                <display-name xml:lang="x-default">Disable Autofocus</display-name>
+                <description xml:lang="x-default">Define the checkout behaviour (GUI).</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcGuiMinimal_confirmation">
+                <display-name xml:lang="x-default">Minimal Confirmation</display-name>
+                <description xml:lang="x-default">Define the checkout behaviour (GUI).</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcRadiusBorder">
+                <display-name xml:lang="x-default">Radius border</display-name>
+                <description xml:lang="x-default">Border radius to be used in Klarna Checkout iFrame</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <default-value>2</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcDateOfBirthMandatory">
+                <display-name xml:lang="x-default">Date of birth mandatory</display-name>
+                <description xml:lang="x-default">If Yes, the consumer cannot skip date of birth. Not available for country US.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcShowSubtotalDetail">
+                <display-name xml:lang="x-default">Show Subtotal Detail</display-name>
+                <description xml:lang="x-default">If Yes, the Order detail subtotals view is expanded.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcSendProductAndImageURLs">
+                <display-name xml:lang="x-default">Send Product and Image URLs</display-name>
+                <description xml:lang="x-default">If Yes, Product URL and Product image URL will be send that can be later embedded in communications between Klarna and the customer.</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>true</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcExternalPaymentMethods">
+                <display-name xml:lang="x-default">External Payment Methods</display-name>
+                <description xml:lang="x-default">Array of payment providers</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcExternalCheckouts">
+                <display-name xml:lang="x-default">External Checkouts</display-name>
+                <description xml:lang="x-default">Array of payment providers</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcAttachments">
+                <display-name xml:lang="x-default">Attachments</display-name>
+                <description xml:lang="x-default">Flag to swicth on/off the using of attachments when creating a session</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcCancellationTermsUrl">
+                <display-name xml:lang="x-default">Cancellation Terms URL</display-name>
+                <description xml:lang="x-default">URL of merchant cancellation terms. Available for DE &amp; AT markets.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNEnabled">
+                <display-name xml:lang="x-default">Virtual Card Network Enabled</display-name>
+                <description xml:lang="x-default">If set to true SFCC will create Virtual Card Network settlement from every Klarna order. Default is false</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
+            <attribute-definition attribute-id="vcnPrivateKey">
+                <display-name xml:lang="x-default">VCN Private Key</display-name>
+                <description xml:lang="x-default">Your 4096 bit RSA Private Key</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNkeyId">
+                <display-name xml:lang="x-default">VCN Key Id</display-name>
+                <description xml:lang="x-default">Unique identifier for the public key used for encryption of the card data</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="vcnPublicKey">
+                <display-name xml:lang="x-default">VCN Public Key</display-name>
+                <description xml:lang="x-default">Your 4096 bit RSA Public Key</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="KlarnaCheckout">
+                <display-name xml:lang="x-default">Klarna Checkout</display-name>
+                <attribute attribute-id="kcPaymentMode"/>
+                <attribute attribute-id="kcServiceName"/>
+                <attribute attribute-id="kcTermsAndConditionsUrl"/>
+                <attribute attribute-id="kcCancellationTermsUrl"/>
+                <attribute attribute-id="kcPrefillCheckoutFields"/>
+                <attribute attribute-id="kcExternalPaymentMethods"/>
+                <attribute attribute-id="kcExternalCheckouts"/>
+                <attribute attribute-id="kcAllowSeparateShippingAddress"/>
+                <attribute attribute-id="kcRequireValidateCallbackSuccess"/>
+                <attribute attribute-id="kcDateOfBirthMandatory"/>
+                <attribute attribute-id="kcAdditionalCheckbox"/>
+                <attribute attribute-id="kcTitleMandatory"/>
+                <attribute attribute-id="kcSendProductAndImageURLs"/>
+                <attribute attribute-id="kcShippingDetails"/>
+                <attribute attribute-id="kcShowSubtotalDetail"/>
+                <attribute attribute-id="kcRadiusBorder"/>
+                <attribute attribute-id="kcColorButton"/>
+                <attribute attribute-id="kcColorButtonText"/>
+                <attribute attribute-id="kcColorCheckbox"/>
+                <attribute attribute-id="kcColorCheckboxCheckmark"/>
+                <attribute attribute-id="kcColorHeader"/>
+                <attribute attribute-id="kcColorLink"/>
+                <attribute attribute-id="kcGuiDisable_autofocus"/>
+                <attribute attribute-id="kcGuiMinimal_confirmation"/>
+                <attribute attribute-id="kcAttachments"/>
+                <attribute attribute-id="kcVCNEnabled"/>
+                <attribute attribute-id="vcnPrivateKey"/>
+                <attribute attribute-id="vcnPublicKey"/>
+                <attribute attribute-id="kcVCNkeyId"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+
+    <type-extension type-id="Order">
+        <custom-attribute-definitions>
+             <attribute-definition attribute-id="kcIsVCN">
+                <display-name xml:lang="x-default">Is VCN Used</display-name>
+                <description xml:lang="x-default">True if VCN is used for payment of the order, otherwise false</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNBrand">
+                <display-name xml:lang="x-default">VCN Brand</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card Brand</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNCSC">
+                <display-name xml:lang="x-default">VCN CSC</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card csc</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNExpirationMonth">
+                <display-name xml:lang="x-default">VCN Expiration Month</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card expiration month</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNExpirationYear">
+                <display-name xml:lang="x-default">VCN Expiration Year</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card expiration year</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNHolder">
+                <display-name xml:lang="x-default">VCN Holder</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card holder name</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNPAN">
+                <display-name xml:lang="x-default">VCN PAN</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card pan</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="Klarna_Checkout">
+                <attribute attribute-id="kcIsVCN"/>
+                <attribute attribute-id="kcVCNHolder"/>
+                <attribute attribute-id="kcVCNPAN"/>
+                <attribute attribute-id="kcVCNExpirationYear"/>
+                <attribute attribute-id="kcVCNExpirationMonth"/>
+                <attribute attribute-id="kcVCNCSC"/>
+                <attribute attribute-id="kcVCNBrand"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+</metadata>

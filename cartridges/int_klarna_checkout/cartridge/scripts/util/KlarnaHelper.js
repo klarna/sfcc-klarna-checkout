@@ -6,7 +6,6 @@
  * @module util/KlarnaHelper
  */
 
-var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 var CustomObjectMgr = require('dw/object/CustomObjectMgr');
 var PaymentInstrument = require('dw/order/PaymentInstrument');
@@ -23,7 +22,7 @@ exports.getLocaleObject = function (country) {
     var countryCode = country;
 
     if (!countryCode) {
-        var Countries = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/util/Countries');
+        var Countries = require('*/cartridge/scripts/util/Countries');
         countryCode = Countries.getCurrent({ CurrentRequest: request }).countryCode;
     }
 
@@ -78,7 +77,7 @@ exports.calculatePaymentTransactionTotals = function (basket) {
 
     // calculate the amount to be charged for the
     // non-gift certificate payment instrument
-    var checkoutUtils = require('int_klarna_checkout/cartridge/scripts/checkout/Utils.ds');
+    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
     var amount = checkoutUtils.calculateNonGiftCertificateAmount(basket);
 
     // now set the non-gift certificate payment instrument total.
@@ -90,3 +89,24 @@ exports.calculatePaymentTransactionTotals = function (basket) {
     return true;
 };
 
+/**
+ * Calculate order total value for a basket.
+ *
+ * @param {dw.order.Basket} basket the basket to calculate the order total value.
+ * @return {dw.value.Money} total order value.
+ */
+exports.calculateOrderTotalValue = function (basket) {
+    // calculate the amount to be charged for the
+    // non-gift certificate payment instrument
+    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
+
+    var orderTotalValue = null;
+
+    if (basket.totalGrossPrice.available) {
+        orderTotalValue = checkoutUtils.calculateNonGiftCertificateAmount(basket);
+    } else {
+        orderTotalValue = basket.getAdjustedMerchandizeTotalPrice(true).add(basket.giftCertificateTotalPrice);
+    }
+
+    return orderTotalValue;
+};

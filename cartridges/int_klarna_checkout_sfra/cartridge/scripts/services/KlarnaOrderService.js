@@ -4,9 +4,9 @@
 var Logger = require('dw/system/Logger');
 var StringUtils = require('dw/util/StringUtils');
 
-var KlarnaHttpService = require('~/cartridge/scripts/services/KlarnaHttpService');
-var KlarnaApiContext = require('~/cartridge/scripts/services/KlarnaApiContext');
-var KlarnaOrderRequestBuilder = require('~/cartridge/scripts/order/klarnaOrderRequestBuilder');
+var KlarnaHttpService = require('*/cartridge/scripts/services/klarnaHttpService');
+var KlarnaApiContext = require('*/cartridge/scripts/services/klarnaApiContext');
+var KlarnaOrderRequestBuilder = require('*/cartridge/scripts/order/klarnaOrderRequestBuilder');
 
 /**
  * @constructor
@@ -22,13 +22,15 @@ function KlarnaOrderService() {
      *
      * @param  {dw.order.Basket} basket - A CartModel wrapping the current Basket.
      * @param  {dw.object.CustomObject} localeObject Klara region specific options
+     * @param  {string} siteLocaleId current site locale id
      * @return {string} Html snippet used for rendering the Klarna checkout
     */
-    this.createOrder = function (basket, localeObject) {
+    this.createOrder = function (basket, localeObject, siteLocaleId) {
         var orderRequestBuilder = new KlarnaOrderRequestBuilder();
         var requestBody = orderRequestBuilder.buildRequest({
             basket: basket,
-            localeObject: localeObject
+            localeObject: localeObject,
+            siteLocaleId: siteLocaleId
         }).get();
 
         var requestUrl = this.klarnaApiContext.getFlowApiUrls().get('createOrder');
@@ -53,13 +55,15 @@ function KlarnaOrderService() {
      * @param  {dw.order.Basket} basket current basket
      * @param  {dw.object.CustomObject} localeObject Klara region specific options
      * @param  {string} klarnaOrderID the ID of the Klarna order
+     * @param  {string} siteLocaleId current site locale id
      * @return {string} Html snippet used for rendering the Klarna checkout
     */
-    this.updateOrder = function (basket, localeObject, klarnaOrderID) {
+    this.updateOrder = function (basket, localeObject, klarnaOrderID, siteLocaleId) {
         var orderRequestBuilder = new KlarnaOrderRequestBuilder();
         var requestBody = orderRequestBuilder.buildRequest({
             basket: basket,
-            localeObject: localeObject
+            localeObject: localeObject,
+            siteLocaleId: siteLocaleId
         }).get();
 
         var requestUrl = StringUtils.format(this.klarnaApiContext.getFlowApiUrls().get('updateOrder'), klarnaOrderID);
@@ -163,8 +167,14 @@ function KlarnaOrderService() {
      * @return {Object} the settlement
     */
     this.createVCNSettlement = function (klarnaOrderID, localeObject) {
+        var Site = require('dw/system/Site');
         var requestUrl = this.klarnaApiContext.getFlowApiUrls().get('vcnSettlement');
-        var requestBody = { order_id: klarnaOrderID };
+
+        var requestBody = {
+            order_id: klarnaOrderID,
+            key_id: Site.getCurrent().getCustomPreferenceValue('kcVCNkeyId')
+        };
+
         var response;
 
         try {

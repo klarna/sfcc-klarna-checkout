@@ -15,7 +15,7 @@ server.get('SelectShippingMethod', server.middleware.https, function (req, res, 
     var PaymentInstrument = require('dw/order/PaymentInstrument');
     var PaymentMgr = require('dw/order/PaymentMgr');
     var OrderModel = require('*/cartridge/models/order');
-    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+    var KlarnaHelpers = require('*/cartridge/scripts/util/klarnaHelpers');
     var ShippingHelper = require('*/cartridge/scripts/checkout/shippingHelpers');
 
     var currentBasket = BasketMgr.getCurrentBasket();
@@ -79,7 +79,7 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
     var PaymentInstrument = require('dw/order/PaymentInstrument');
     var PaymentMgr = require('dw/order/PaymentMgr');
     var OrderModel = require('*/cartridge/models/order');
-    var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+    var KlarnaHelpers = require('*/cartridge/scripts/util/klarnaHelpers');
 
     var currentBasket = BasketMgr.getCurrentBasket();
 
@@ -95,7 +95,7 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
         var countryCode = req.querystring.country.toLowerCase();
         // Klarna JS API returns ISO3 country codes in this case, so we use map to get ISO2 country codes.
         if (countryCode && countryCode.length === 3) {
-            var countryCodesMap = require('~/cartridge/config/countryCodesMap');
+            var countryCodesMap = require('*/cartridge/config/countryCodesMap');
             countryCode = countryCodesMap[countryCode];
         }
 

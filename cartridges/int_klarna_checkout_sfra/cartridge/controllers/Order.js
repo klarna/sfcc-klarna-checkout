@@ -3,7 +3,7 @@
 var page = module.superModule;
 var server = require('server');
 
-var KlarnaHelpers = require('~/cartridge/scripts/util/klarnaHelpers');
+var KlarnaHelpers = require('*/cartridge/scripts/util/klarnaHelpers');
 
 server.extend(page);
 
@@ -17,7 +17,7 @@ server.replace('Confirm', server.middleware.https, function (req, res, next) {
     var Transaction = require('dw/system/Transaction');
     var OrderModel = require('*/cartridge/models/order');
     var Logger = require('dw/system/Logger');
-    var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
+    var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
     var reportingUrlsHelper = require('*/cartridge/scripts/reportingUrls');
 
     var clearBasket = function () {

@@ -4,7 +4,7 @@
     var $checkoutMain = $('#checkout-main');
     var $shippingMethodList = $('#shipping-method-list');
 
-     /**
+    /**
 	 * @function
 	 * @description Adds appends param to an url
      * @param {string} url the url
@@ -38,7 +38,7 @@
         return newUrl;
     }
 
-	/**
+    /**
 	 * @function
 	 * @description pause Klarna Checkout
 	 */
@@ -48,7 +48,7 @@
         });
     }
 
-	/**
+    /**
 	 * @function
 	 * @description resume Klarna Checkout
 	 */
@@ -58,7 +58,7 @@
         });
     }
 
-	/**
+    /**
 	 * @function
 	 * @description updates the Klarna order with the new shipping method
 	 */
@@ -70,7 +70,7 @@
         });
     }
 
-	/**
+    /**
 	 * @function
 	 * @description updates the totals summary
 	 * @param {Array} totals - the totals data

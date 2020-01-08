@@ -6,7 +6,6 @@
  * @module controllers/KlarnaPlaceOrder
 */
 
-var STOREFRONT_CARTRIDGE = require('~/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
 var Transaction = require('dw/system/Transaction');
@@ -18,10 +17,10 @@ var Status = require('dw/system/Status');
 var Order = require('dw/order/Order');
 
 /* Script Modules */
-var app = require(STOREFRONT_CARTRIDGE.CONTROLLERS + '/cartridge/scripts/app');
-var KlarnaCartModel = require('~/cartridge/scripts/models/KlarnaCartModel');
-var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
-var KLARNA_PAYMENT_METHOD = require('int_klarna_checkout/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
+var app = require('*/cartridge/scripts/app');
+var KlarnaCartModel = require('*/cartridge/scripts/models/KlarnaCartModel');
+var KlarnaOrderService = require('*/cartridge/scripts/services/KlarnaOrderService');
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
 
 /**
  * Set SFCC Order Customer
@@ -57,6 +56,20 @@ function setOrderCustomer(order, customerNo) {
 }
 
 /**
+ * Compares totals in Klarna and SFCC orders
+ *
+ * @param {Object} klarnaOrderObject - Klarna order
+ * @param  {dw.order.Basket} basket - SFCC basket
+ * @return  {boolean} if both order totals are equal
+ */
+function areKlarnaAndSfccTotalsEqual(klarnaOrderObject, basket) {
+    var klarnaOrderTotal = Math.round(klarnaOrderObject.order_amount);
+    var sfccOrderAmount = Math.round(basket.getNonGiftCertificateAmount().value * 100);
+
+    return sfccOrderAmount === klarnaOrderTotal;
+}
+
+/**
  * Creates the order in SFCC
  *
  * @transactional
@@ -76,6 +89,14 @@ function createOrder(klarnaOrderObject, localeObject) {
         return null;
     }
 
+    // We are handling the case when you hit the checkout with a promotion applied.
+    // While at checkout, the promotion expires. However, Klarna has no way to know and
+    // that's where the two orders' totals start to diverge. Thus we fail to create the order
+    // and this will fail Klarna order validation upon order submit
+    if (!areKlarnaAndSfccTotalsEqual(klarnaOrderObject, cart)) {
+        return null;
+    }
+
     Transaction.begin();
 
     var order = null;
@@ -88,7 +109,7 @@ function createOrder(klarnaOrderObject, localeObject) {
 
             var regionOptions;
             if (!localeObject) {
-                var utils = require('~/cartridge/scripts/util/KlarnaHelper');
+                var utils = require('*/cartridge/scripts/util/KlarnaHelper');
                 regionOptions = utils.getLocaleObject();
             } else {
                 regionOptions = localeObject;
@@ -221,7 +242,7 @@ function start(context) {
 
     if (handlePaymentsResult.error) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,
@@ -230,7 +251,7 @@ function start(context) {
         });
     } else if (handlePaymentsResult.missingPaymentInfo) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,
@@ -239,7 +260,7 @@ function start(context) {
         });
     } else if (handlePaymentsResult.declined) {
         return Transaction.wrap(function () {
-            OrderMgr.failOrder(order);
+            OrderMgr.failOrder(order, true);
             session.privacy.klarnaOrderID = null;
             return {
                 error: true,

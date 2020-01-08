@@ -1,6 +1,5 @@
 'use strict';
 
-var STOREFRONT_CARTRIDGE = require('int_klarna_checkout/cartridge/scripts/util/KlarnaConstants.js').STOREFRONT_CARTRIDGE;
 
 /* API Includes */
 var Transaction = require('dw/system/Transaction');
@@ -10,7 +9,7 @@ var Logger = require('dw/system/Logger');
 var Site = require('dw/system/Site');
 
 /* Script Modules */
-var Utils = require(STOREFRONT_CARTRIDGE.CORE + '/cartridge/scripts/checkout/Utils.ds');
+var Utils = require('*/cartridge/scripts/checkout/Utils.ds');
 var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 
 /**
@@ -76,8 +75,6 @@ function handleFraudStatus(klarnaFraudStatus, isPendingOrder) {
  * @return {Object} creation result, if successful { success: true }, otherwise { error: true }
 */
 function createVCNSettlement(order, klarnaOrderID, localeObject) {
-    var Cypher = require('dw/crypto/Cipher');
-
     var klarnaOrderService = new KlarnaOrderService();
 
     var response = klarnaOrderService.createVCNSettlement(klarnaOrderID, localeObject);
@@ -87,28 +84,31 @@ function createVCNSettlement(order, klarnaOrderID, localeObject) {
     }
 
     try {
-        // Decrypt PAN and CSC
+        var Cypher = require('dw/crypto/Cipher');
+        var Encoding = require('dw/crypto/Encoding');
         var VCNPrivateKey = Site.getCurrent().getCustomPreferenceValue('vcnPrivateKey');
         var cypher = new Cypher();
 
-        var panEncrypted = response.cards[0].pan;
-        var cscEncrypted = response.cards[0].csc;
+        var keyEncryptedBase64 = response.cards[0].aes_key;
+        var keyEncryptedBytes = Encoding.fromBase64(keyEncryptedBase64);
+        var keyDecrypted = cypher.decryptBytes(keyEncryptedBytes, VCNPrivateKey, 'RSA/ECB/PKCS1PADDING', null, 0);
+        var keyDecryptedBase64 = Encoding.toBase64(keyDecrypted);
+        var cardDataEncryptedBase64 = response.cards[0].pci_data;
+        var cardDataEncryptedBytes = Encoding.fromBase64(cardDataEncryptedBase64);
+        var cardDecrypted = cypher.decryptBytes(cardDataEncryptedBytes, keyDecryptedBase64, 'AES/CTR/NoPadding', response.cards[0].iv, 0);
 
-        // mocking pan and csc for debug purposes
-        // var panEncrypted = 'U50dpsYfr29a+kZta2A9pYdAPYvp1GnUYEt7BwFF2vWcD+31EHhzUuKHNnns61NQ+pjayXjHMll1v3lNLDehhAVj5/OuJCmAgk20Wx1SI/RYLtK5wA9Iv7ZOnGdwXOseTTUcXCgY1fjpBWtpqlgsBgqobZhaX3Q0KaBk89qwT2o21/Yo5HKiafxnZSAQ0x2lG5GBkRjy/UC/9nfkeCNZATxADQG2L3FnHrqXq/F6CLUmsxPIawWO5wmpYToa4/4UhAuQS/L/3lmvXoBd68gNSQsWSs+gjrNxMejmR5HJvzuwUj+htLZxvGds+FRSFFABZfbU+z1b9HjbzdxdkD55jtVHoWA1diTiFODSguScertk0oCwAFz6AKFC4P7NedfDuko3QFew2ab3CFO76DYQYXDE18itNHAG/PgpkYttS7sS1n1EJMBGh+18BbOmOutyuuAq0z7j3tiUfLl0aXCMs76VeoawGBKQhIY2k6fUTlaRjolSAwcwZbZV7dZZq5TcwIVzhiIBOtz/v3y0AhnEUua5kOeM6r1ulPqdPv2vHRIPPDHwQ6051GB68QpVnIRnvR63UVOqogsXyBduO281MNbXWRlO7c1UbjI3UlJiM0AVsZgZ0uWQxhbF+Xu48dkjhcjvbA4oi79RRtw4UfDHyEOOSX2zaOf/D5KY1GUPwAw=';
-        // var cscEncrypted = 'P/jEMDJszBNpVdwNN/OCBHW+yuF3WcXGhX/vwVFjeGjp/YohO//6pHm9ggtY0m6inTzvfA849VZlJxeq8QVpo1p8dUUvC6L6CvmUEC8kUZBU77TkNChJCvzaGYr74pjsntu65A3nipraGCoCkAdYagtrJBZ0gl6jrv8jq2f+OfuH+YZoX0HMqvSh0v1+M+7sHLhxVDPs7Daqn8v6qyuZEajMYk4AZI4uKAu/X3TJTItC4hXa/epGIPDivyQ/EwDMK27P/I8rfw0bY6zxMw2+fYWlVjXbrUtl7Z/WiiUNC3cayrZtysAphD3RLt9re6dC6h1AzCIWBFZxHKCJB1MihDqgALOeLS6B4rxqljbb3bfWAkK6nkbnSEHwlvh628eNyIS9Ga/YWlriy4Z7kcCH7VuFcfKskGiDUE1qozeOmq58dMj6DRwsjgCshnWfd/HXcIdYuvEb0wn/mMygZa7MG2V7Sd2ROLtNpn6JhR0WScgJcwNWVN7sfhmElGy8bcmDYArusU0mDTUfamPmhVeRTbdiWE8xEqSqmIStUoPe1BvxHeKs+Gdw6iQKsxruwOJb+Tz5zzyfbsrVDp3wxsa3nb9nSJOZGTmi3ie7y02a/KuLGsypsIXZR2P1Jjofuh4mvT1nu4W2VJKNG9IuhxIAh8adCCxbZ0Cn70+8P3p42S4=';
-
-        var panDecrypted = cypher.decrypt(panEncrypted, VCNPrivateKey, 'RSA/ECB/PKCS1PADDING', null, 0);
-        var cscDecrypted = cypher.decrypt(cscEncrypted, VCNPrivateKey, 'RSA/ECB/PKCS1PADDING', null, 0);
+        var cardDecryptedUtf8 = decodeURIComponent(cardDecrypted);
+        var cardObject = JSON.parse(cardDecryptedUtf8);
+        var expiryDateArray = cardObject.expiry_date.split('/');
 
         Transaction.wrap(function () {
             var orderObj = order;
             orderObj.custom.kcVCNBrand = response.cards[0].brand;
-            orderObj.custom.kcVCNCSC = cscDecrypted;
-            orderObj.custom.kcVCNExpirationMonth = response.cards[0].expiration_month;
-            orderObj.custom.kcVCNExpirationYear = response.cards[0].expiration_year;
+            orderObj.custom.kcVCNCSC = cardObject.cvv;
+            orderObj.custom.kcVCNExpirationMonth = expiryDateArray[0];
+            orderObj.custom.kcVCNExpirationYear = expiryDateArray[1];
             orderObj.custom.kcVCNHolder = response.cards[0].holder;
-            orderObj.custom.kcVCNPAN = panDecrypted;
+            orderObj.custom.kcVCNPAN = cardObject.pan;
             orderObj.custom.kcIsVCN = true;
         });
     } catch (e) {

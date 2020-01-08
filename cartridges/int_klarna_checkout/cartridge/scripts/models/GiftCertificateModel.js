@@ -28,7 +28,7 @@ function createGiftCertificateFromLineItem(giftCertificateLineItem, orderNo) {
  * @returns {void}
  */
 function sendGiftCertificateEmail(giftCertificate) {
-    var Email = require('./EmailModel');
+    var Email = require('*/cartridge/scripts/models/EmailModel');
     var Resource = require('dw/web/Resource');
     Email.sendMail({
         recipient: giftCertificate.getRecipientEmail(),

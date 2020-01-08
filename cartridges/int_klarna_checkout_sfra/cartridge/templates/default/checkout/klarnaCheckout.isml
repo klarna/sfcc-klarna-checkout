@@ -6,7 +6,7 @@
 
     <isscript>
         var assets = require('*/cartridge/scripts/assets.js');
-        assets.addJs('/js/klarna-checkout.js');
+        assets.addJs('/js/klarnaCheckout.js');
     </isscript>
 
     <h1 class="page-title">
@@ -78,7 +78,7 @@
                     </isif>
                 </div>
             </div>
-        
+
             <!----------------------------------------------------------------------------------->
             <!-- Order Totals, Details and Summary -->
             <!----------------------------------------------------------------------------------->

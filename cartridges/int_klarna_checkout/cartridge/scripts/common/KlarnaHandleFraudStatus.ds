@@ -10,7 +10,7 @@
  */
 
 var Logger = require('dw/system/Logger');
-var FRAUD_STATUS = require('../util/KlarnaConstants.js').FRAUD_STATUS;
+var FRAUD_STATUS = require('*/cartridge/scripts/util/KlarnaConstants.js').FRAUD_STATUS;
 
 function execute( args : PipelineDictionary ) : Number
 {
