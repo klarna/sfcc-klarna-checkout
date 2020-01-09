@@ -3,6 +3,7 @@
 
 *.isml text
 
+
 # Force all text file types to have unix line endings
 *.* text eol=lf
 
@@ -26,3 +27,5 @@ core.autocrlf=input
 *.jar binary
 *.woff2 binary
 *.woff binary
+*.docx binary
+*.pdf binary
