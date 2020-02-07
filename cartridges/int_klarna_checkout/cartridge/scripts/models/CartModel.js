@@ -321,7 +321,6 @@ var CartModel = AbstractModel.extend({
      * @returns {dw.order.ProductLineItem} The newly created product line item.
      */
     addBonusProduct: function (bonusDiscountLineItem, product, selectedOptions, quantity) {
-        // TODO: Should this actually be using the dw.catalog.ProductOptionModel.UpdateProductOptionSelections method instead?
         var UpdateProductOptionSelections = require('*/cartridge/scripts/cart/UpdateProductOptionSelections');
         var ScriptResult = UpdateProductOptionSelections.update({
             SelectedOptions: selectedOptions,
@@ -346,7 +345,6 @@ var CartModel = AbstractModel.extend({
      * product line items for.
      */
     removeBonusDiscountLineItemProducts: function (bonusDiscountLineItem) {
-        // TODO - add check whether the given line item actually belongs to this cart object.
         var plis = bonusDiscountLineItem.getBonusProductLineItems();
 
         for (var i = 0; i < plis.length; i++) {
@@ -387,7 +385,6 @@ var CartModel = AbstractModel.extend({
      * @returns {dw.order.ProductLineItem} The product line item or null if not found.
      */
     getBundledProductLineItemByPID: function (bundleLineItem, pid) {
-        // TODO - add check whether the given line item actually belongs to this cart object
         var plis = bundleLineItem.getBundledProductLineItems();
         var lineItem = null;
 

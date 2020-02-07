@@ -93,8 +93,6 @@ Meta.prototype = {
                 dw.system.Logger.debug('Content breadcrumbs calculated: ' + JSON.stringify(this.data.breadcrumbs));
             }
         } else if (typeof object === 'string') {
-            // @TODO Should ideally allow to pass something like account.overview, account.wishlist etc.
-            // and at least generate the breadcrumbs & page title
         } else {
             if (object.pageTitle) {
                 this.data.page.title = object.pageTitle;
@@ -105,7 +103,6 @@ Meta.prototype = {
             if (object.pageDescription) {
                 this.data.page.description = object.pageDescription;
             }
-            // @TODO do an _.extend(this.data, object) of the passed object
         }
         this.updatePageMetaData();
     },

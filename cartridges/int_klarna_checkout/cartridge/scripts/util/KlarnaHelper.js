@@ -77,7 +77,7 @@ exports.calculatePaymentTransactionTotals = function (basket) {
 
     // calculate the amount to be charged for the
     // non-gift certificate payment instrument
-    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
+    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils');
     var amount = checkoutUtils.calculateNonGiftCertificateAmount(basket);
 
     // now set the non-gift certificate payment instrument total.
@@ -98,7 +98,7 @@ exports.calculatePaymentTransactionTotals = function (basket) {
 exports.calculateOrderTotalValue = function (basket) {
     // calculate the amount to be charged for the
     // non-gift certificate payment instrument
-    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
+    var checkoutUtils = require('*/cartridge/scripts/checkout/Utils');
 
     var orderTotalValue = null;
 

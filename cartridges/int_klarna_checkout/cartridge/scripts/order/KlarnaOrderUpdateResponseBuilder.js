@@ -10,7 +10,7 @@
     var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/KlarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
     var LineItem = require('*/cartridge/scripts/order/KlarnaOrderUpdateModel').LineItem;
     var ShippingOption = require('*/cartridge/scripts/order/KlarnaOrderUpdateModel').ShippingOption;
-    var CheckoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
+    var CheckoutUtils = require('*/cartridge/scripts/checkout/Utils');
     var ShippingMgr = require('dw/order/ShippingMgr');
     var TaxMgr = require('dw/order/TaxMgr');
     var Transaction = require('dw/system/Transaction');

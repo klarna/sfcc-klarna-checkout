@@ -64,7 +64,6 @@ var EmailModel = AbstractModel.extend({
         var contentTemplate = new Template(this.template);
         params.put('MainContent', contentTemplate.render(params).text);
 
-        // @TODO Enable this to allow for a shared pt_email which creates consistent header/footer
         // integrate the body in the global content
         // var template = new dw.util.Template('mail/pt_email');
         // var content = template.render(params);

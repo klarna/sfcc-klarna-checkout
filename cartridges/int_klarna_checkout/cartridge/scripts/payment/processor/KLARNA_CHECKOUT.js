@@ -9,7 +9,7 @@ var Logger = require('dw/system/Logger');
 var Site = require('dw/system/Site');
 
 /* Script Modules */
-var Utils = require('*/cartridge/scripts/checkout/Utils.ds');
+var Utils = require('*/cartridge/scripts/checkout/Utils');
 var KlarnaOrderService = require('~/cartridge/scripts/services/KlarnaOrderService');
 
 /**

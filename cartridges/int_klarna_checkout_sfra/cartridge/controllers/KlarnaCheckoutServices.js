@@ -132,7 +132,7 @@ server.post('Push', server.middleware.https, function (req, res) {
     if (order && order.confirmationStatus.value === Order.CONFIRMATION_STATUS_CONFIRMED) {
         klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject);
     } else if (order && (order.status.value === Order.ORDER_STATUS_CREATED && klarnaOrderObject.fraud_status === FRAUD_STATUS.PENDING)) {
-        klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject); // @TODO Verify with Klarna if they want acknowledge for pending orders
+        klarnaOrderService.acknowledgeOrder(klarnaOrderID, localeObject);
     } else {
         klarnaOrderService.cancelOrder(klarnaOrderID, localeObject);
     }

@@ -11,7 +11,7 @@
     var KlarnaOrderModel = require('*/cartridge/scripts/order/KlarnaOrderModel').KlarnaOrderModel;
     var LineItem = require('*/cartridge/scripts/order/KlarnaOrderModel').LineItem;
     var ShippingOption = require('*/cartridge/scripts/order/KlarnaOrderModel').ShippingOption;
-    var CheckoutUtils = require('*/cartridge/scripts/checkout/Utils.ds');
+    var CheckoutUtils = require('*/cartridge/scripts/checkout/Utils');
     var ShippingMgr = require('dw/order/ShippingMgr');
     var Transaction = require('dw/system/Transaction');
     var URLUtils = require('dw/web/URLUtils');
