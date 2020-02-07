@@ -14,6 +14,8 @@ importPackage( dw.value );
 importPackage( dw.web );
 importPackage( dw.catalog );
 
+var Money = require('dw/value/Money');
+
 /**
  * Calculates the amount to be payed by a non-gift certificate payment instrument based
  * on the given basket. The method subtracts the amount of all redeemed gift certificates
@@ -21,15 +23,15 @@ importPackage( dw.catalog );
  *
  * PJP-2000: Modified logic to use LineItemCtnr (to support both Basket and Order)
  */
-function calculateNonGiftCertificateAmount( lineItemCtnr : LineItemCtnr )
+function calculateNonGiftCertificateAmount( lineItemCtnr )
 {
 	// the total redemption amount of all gift certificate payment instruments in the basket
-	var giftCertTotal : Money = new Money( 0.0, lineItemCtnr.currencyCode );
+	var giftCertTotal = new Money( 0.0, lineItemCtnr.currencyCode );
 
 	// get the list of all gift certificate payment instruments
-	var gcPaymentInstrs : Collection = lineItemCtnr.getGiftCertificatePaymentInstruments();
-	var iter : Iterator = gcPaymentInstrs.iterator();
-	var orderPI : OrderPaymentInstrument = null;
+	var gcPaymentInstrs = lineItemCtnr.getGiftCertificatePaymentInstruments();
+	var iter = gcPaymentInstrs.iterator();
+	var orderPI = null;
 
 	// sum the total redemption amount
 	while( iter.hasNext() )
@@ -39,11 +41,11 @@ function calculateNonGiftCertificateAmount( lineItemCtnr : LineItemCtnr )
 	}
 
 	// get the order total
-	var orderTotal : Money = lineItemCtnr.totalGrossPrice;
+	var orderTotal = lineItemCtnr.totalGrossPrice;
 
 	// calculate the amount to charge for the payment instrument
 	// this is the remaining open order total which has to be paid
-	var amountOpen : Money = orderTotal.subtract( giftCertTotal );
+	var amountOpen = orderTotal.subtract( giftCertTotal );
 
 	// return the open amount
 	return amountOpen;
@@ -56,11 +58,11 @@ function calculateNonGiftCertificateAmount( lineItemCtnr : LineItemCtnr )
  * unique this ID is returned, if not the counter is incremented and
  * checked again.
  */
-function determineUniqueShipmentID( basket : Basket, baseID : String )
+function determineUniqueShipmentID( basket, baseID )
 {
-	var counter : Number = 1;
-	var shipment : Shipment = null;
-	var candidateID : String = baseID + "" + counter;
+	var counter = 1;
+	var shipment = null;
+	var candidateID = baseID + "" + counter;
 	while( shipment == null )
 	{
 		shipment = basket.getShipment(candidateID);
@@ -87,30 +89,30 @@ function determineUniqueShipmentID( basket : Basket, baseID : String )
  */
 function ShippingAddress()
 {
-	var UUID : String = null;
+	var UUID = null;
 
-	var ID 			: String = null;
-	var firstName 	: String = null;
-	var lastName 	: String = null;
-	var address1 	: String = null;
-	var address2 	: String = null;
-	var city 		: String = null;
-	var postalCode 	: String = null;
-	var stateCode 	: String = null;
-	var countryCode : String = null;
-	var phone 		: String = null;
+	var ID  = null;
+	var firstName = null;
+	var lastName = null;
+	var address1 = null;
+	var address2  = null;
+	var city  = null;
+	var postalCode = null;
+	var stateCode = null;
+	var countryCode = null;
+	var phone = null;
 
 	/**
 	 * The UUID of the reference address. It is set when the attributes
 	 * are copied from a given customer or order address and is used
 	 * to preselect addresses on a per product line item base.
 	 */
-	var referenceAddressUUID : String = null;
+	var referenceAddressUUID = null;
 
 	/**
 	 * Copies the attributes of this address to the given order address.
 	 */
-	this.copyTo = function( toAddress : OrderAddress )
+	this.copyTo = function( toAddress )
 	{
 		toAddress.setFirstName( this.firstName );
 		toAddress.setLastName( this.lastName );
@@ -126,7 +128,7 @@ function ShippingAddress()
 	/**
 	 * Copies the attributes of a store's address to the given order address.
 	 */
-	this.storeAddressTo = function(toAddress : OrderAddress , storeObject : dw.catalog.Store )
+	this.storeAddressTo = function(toAddress, storeObject )
 	{
 		toAddress.setFirstName( '' );
 		toAddress.setLastName( storeObject.name );
@@ -144,7 +146,7 @@ function ShippingAddress()
 	 * order address to this address. The function supports both
 	 * copying from CustomerAddress as well as from OrderAddress.
 	 */
-	this.copyFrom = function( fromAddress : CustomerAddress )
+	this.copyFrom = function( fromAddress )
 	{
 		// if we copy from a customer address, we set the address ID
 		if( fromAddress instanceof CustomerAddress )
@@ -183,27 +185,27 @@ function ShippingAddress()
 	*	New function for multi-shipping checkout
 	*	Checks if the address already exists in an array of addresses
 	*/
-	this.addressExists = function (addresses : Array) : Boolean
+	this.addressExists = function (addresses)
 	{
-		for each (var address : Object in addresses){
-			if (this.referenceAddressUUID != null && (address.referenceAddressUUID != null)){
-				if (this.referenceAddressUUID.equals(address.referenceAddressUUID)){
-					return true;
-				}
-			} else {
-				if (this.firstName == address.firstName &&
-					this.lastName == address.lastName &&
-					this.address1 == address.address1 &&
-					this.address2 == address.address2 &&
-					this.city == address.city &&
-					this.postalCode == address.postalCode &&
-					this.stateCode == address.stateCode &&
-					this.countryCode == address.countryCode &&
-					this.phone == address.phone){
-						return true;
-					}
-			}
-		}
+		// for each (var address in addresses) {
+		// 	if (this.referenceAddressUUID != null && (address.referenceAddressUUID != null)){
+		// 		if (this.referenceAddressUUID.equals(address.referenceAddressUUID)){
+		// 			return true;
+		// 		}
+		// 	} else {
+		// 		if (this.firstName == address.firstName &&
+		// 			this.lastName == address.lastName &&
+		// 			this.address1 == address.address1 &&
+		// 			this.address2 == address.address2 &&
+		// 			this.city == address.city &&
+		// 			this.postalCode == address.postalCode &&
+		// 			this.stateCode == address.stateCode &&
+		// 			this.countryCode == address.countryCode &&
+		// 			this.phone == address.phone){
+		// 				return true;
+		// 			}
+		// 	}
+		// }
 
 		return false;
 	}
@@ -212,20 +214,20 @@ function ShippingAddress()
 /**
  * Creates a new transient shipping address in the session dictionary.
  */
-function createShippingAddress( referenceAddress : CustomerAddress )
+function createShippingAddress( referenceAddress )
 {
 	// create a new in memory address and set the UUID
-	var address : Object = new ShippingAddress();
+	var address = new ShippingAddress();
 	address.UUID = UUIDUtils.createUUID();
 
 	// get all addresses from session dictionary
-	var addresses : Collection = session.custom.shippingAddresses;
+	var addresses = session.privacy.shippingAddresses;
 
 	// create an empty array, if no collection was found in session dictionary
 	if( addresses == null )
 	{
 		addresses = new ArrayList();
-		session.custom.shippingAddresses = addresses;
+		session.privacy.shippingAddresses = addresses;
 	}
 
 	// add the address to the collection
@@ -241,7 +243,7 @@ function createShippingAddress( referenceAddress : CustomerAddress )
  * Finds a transient shipping address in the session dictionary
  * and returns the found address.
  */
-function findShippingAddress( uuid : String )
+function findShippingAddress( uuid  )
 {
 	// check if uuid is set
 	if( empty(uuid) )
@@ -250,7 +252,7 @@ function findShippingAddress( uuid : String )
 	}
 
 	// get all addresses from session dictionary
-	var addresses : Collection = session.custom.shippingAddresses;
+	var addresses  = session.privacy.shippingAddresses;
 
 	// check if there are addresses at all
 	if( addresses == null || addresses.size() == 0 )
@@ -273,7 +275,7 @@ function findShippingAddress( uuid : String )
 /**
  * Removes a transient shipping address from the session dictionary.
  */
-function removeShippingAddress( shippingAddress : Object )
+function removeShippingAddress( shippingAddress )
 {
 	// check if shippingAddress is set
 	if( empty(shippingAddress) )
@@ -282,7 +284,7 @@ function removeShippingAddress( shippingAddress : Object )
 	}
 
 	// get all addresses from session dictionary
-	var addresses : Collection = session.custom.shippingAddresses;
+	var addresses = session.privacy.shippingAddresses;
 
 	// check if there are addresses at all
 	if( addresses == null || addresses.size() == 0 )
@@ -300,12 +302,12 @@ function removeShippingAddress( shippingAddress : Object )
  * Determines if the basket already contains payment
  * instruments of the given payment method and removes them from the basket.
  */
-function removeExistingPaymentInstruments( lineItemCtnr : LineItemCtnr, method : String )
+function removeExistingPaymentInstruments( lineItemCtnr, method )
 {
 	// get all credit card payment instruments
-	var ccPaymentInstrs : Collection = lineItemCtnr.getPaymentInstruments( method );
-	var iter : Iterator = ccPaymentInstrs.iterator();
-	var existingPI : OrderPaymentInstrument = null;
+	var ccPaymentInstrs  = lineItemCtnr.getPaymentInstruments( method );
+	var iter = ccPaymentInstrs.iterator();
+	var existingPI  = null;
 
 	// remove them
 	while( iter.hasNext() )
@@ -319,10 +321,10 @@ function removeExistingPaymentInstruments( lineItemCtnr : LineItemCtnr, method :
 *	New function for multi-shipping checkout
 *	Adds a new address to the JSON object of the sessionAddressBook attribute
 */
-function addAddressToJSON(jsonAddressBook : String, referenceAddress : Object) : String {
-	var address : Object = new ShippingAddress();
-	var jsonObj : Object = new Object();
-	var log : Log = Logger.getLogger("multishipping");
+function addAddressToJSON(jsonAddressBook, referenceAddress) {
+	var address = new ShippingAddress();
+	var jsonObj = new Object();
+	var log = Logger.getLogger("multishipping");
 
 	if (referenceAddress != null){
 		// Try to parse incoming JSON string
@@ -356,10 +358,10 @@ function addAddressToJSON(jsonAddressBook : String, referenceAddress : Object) :
 *	New function for multi-shipping checkout
 *	Updates an address in the JSON sessionAddressBookAttribute
 */
-function updateAddressInJSON(jsonAddressBook : String, referenceAddress : Object) : String {
-	var jsonObj : Object = new Object();
-	var addresses : Array = new Array();
-	var log : Log = Logger.getLogger("multishipping");
+function updateAddressInJSON(jsonAddressBook, referenceAddress) {
+	var jsonObj = new Object();
+	var addresses = new Array();
+	var log = Logger.getLogger("multishipping");
 
 	if (referenceAddress != null && jsonAddressBook != null){
 		try {
@@ -386,11 +388,11 @@ function updateAddressInJSON(jsonAddressBook : String, referenceAddress : Object
 /**
 *	Returns the addresses stored in the sessionAddressBook attribute as ArrayList.
 */
-function getSessionAddresses(basket : Basket) : ArrayList {
-	var sessionAddressBookObj : Object = new Object();
-	var sessionAddressBook : String = new String();
-	var sessionAddresses : ArrayList = new ArrayList();
-	var log : Log = Logger.getLogger("multishipping");
+function getSessionAddresses(basket) {
+	var sessionAddressBookObj = new Object();
+	var sessionAddressBook = new String();
+	var sessionAddresses = new ArrayList();
+	var log = Logger.getLogger("multishipping");
 
 	if (!empty(basket.describe().getCustomAttributeDefinition('sessionAddressBook'))){
 		sessionAddressBook = basket.custom.sessionAddressBook;
@@ -417,11 +419,11 @@ function getSessionAddresses(basket : Basket) : ArrayList {
 *	Used in Multi-Shipping Checkout to save creation of new PLIs for each quantity.
 */
 function QuantityLineItem() {
-	var productID : String = null;
-	var lineItemText : String = null;
-	var quantity : Quantity = null;
-	var pliUUID : String = null;
-	var optionID : String = null;
+	var productID = null;
+	var lineItemText = null;
+	var quantity = null;
+	var pliUUID = null;
+	var optionID = null;
 }
 
 module.exports = {
