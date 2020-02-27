@@ -36,7 +36,7 @@ function prepareShipping(basket, localeObject) {
     });
 }
 
-server.replace('Login', server.middleware.get, function (req, res, next) {
+server.prepend('Login', server.middleware.get, function (req, res, next) {
     var URLUtils = require('dw/web/URLUtils');
     res.redirect(URLUtils.https('Checkout-Begin'));
     next();
@@ -45,9 +45,7 @@ server.replace('Login', server.middleware.get, function (req, res, next) {
 /**
  * Begin the Klarna Checkout process
  */
-server.replace('Begin', server.middleware.https, function (req, res, next) {
-    var URLUtils = require('dw/web/URLUtils');
-    var Transaction = require('dw/system/Transaction');
+server.append('Begin', server.middleware.https, function (req, res, next) {
     var HookMgr = require('dw/system/HookMgr');
     var BasketMgr = require('dw/order/BasketMgr');
     var Resource = require('dw/web/Resource');
@@ -55,24 +53,8 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
     var OrderModel = require('*/cartridge/models/order');
     var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
-    var hooksHelper = require('*/cartridge/scripts/helpers/hooks');
 
     var currentBasket = BasketMgr.getCurrentBasket();
-    if (!currentBasket) {
-        res.redirect(URLUtils.https('Cart-Show'));
-        return next();
-    }
-
-    // Calculate the basket
-    Transaction.wrap(function () {
-        COHelpers.ensureNoEmptyShipments(req);
-    });
-
-    if (currentBasket.currencyCode !== req.session.currency.currencyCode) {
-        Transaction.wrap(function () {
-            currentBasket.updateCurrency();
-        });
-    }
 
     if (req.session.privacyCache.get('usingMultiShipping') && currentBasket.shipments.length > 1) {
         res.render('checkout/klarnaCheckout', {
@@ -90,19 +72,6 @@ server.replace('Begin', server.middleware.https, function (req, res, next) {
     }
 
     var allValid = COHelpers.ensureValidShipments(currentBasket);
-
-    var validationBasketStatus = hooksHelper(
-        'app.validate.basket',
-        'validateBasket',
-        currentBasket,
-        false,
-        require('*/cartridge/scripts/hooks/validateBasket').validateBasket
-    );
-
-    if (validationBasketStatus.error) {
-        res.redirect(URLUtils.https('Cart-Show'));
-        return next();
-    }
 
     prepareShipping(currentBasket, localeObject);
 
