@@ -311,7 +311,7 @@ function restoreLineItems(basket, klarnaOrderObj) {
                     var couponCode = merchantData.couponCode;
 
                     try {
-                        this.createCouponLineItem(couponCode, campaignBased);
+                        basket.createCouponLineItem(couponCode, campaignBased);
                     } catch (e) {
                         if (e instanceof APIException && e.type === 'CreateCouponLineItemException') {
                             Logger.getLogger('Klarna').debug('CreateCouponLineItemException while restoring basket, error code: {0}', e.errorCode);

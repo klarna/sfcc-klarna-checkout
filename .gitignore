@@ -1,6 +1,7 @@
 node_modules/
 coverage/
 npm-debug.log
+cartridges/int_klarna_checkout_sfra/cartridge/static/
 cartridges.zip
 .idea/
 dw.json

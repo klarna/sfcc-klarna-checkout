@@ -16,8 +16,8 @@ var HookMgr = require('dw/system/HookMgr');
 var Currency = require('dw/util/Currency');
 var AmountDiscount = require('dw/campaign/AmountDiscount');
 
-var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/KlarnaConstants.js').ORDER_LINE_TYPE;
-var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
+var ORDER_LINE_TYPE = require('*/cartridge/scripts/util/klarnaConstants.js').ORDER_LINE_TYPE;
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
 var CartModel = require('*/cartridge/scripts/models/CartModel');
 
 /**
@@ -309,7 +309,7 @@ var KlarnaCartModel = CartModel.extend({
             if (orderLine.type === ORDER_LINE_TYPE.DISCOUNT && orderLine.merchant_data) {
                 var merchantData = JSON.parse(orderLine.merchant_data);
                 if (merchantData.basedOnCustomerGroups) {
-                    var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/KlarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+                    var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = require('*/cartridge/scripts/util/klarnaConstants.js').KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
                     var discountAmount = Math.abs(orderLine.unit_price / 100);
                     var discount = new AmountDiscount(discountAmount);
 

@@ -87,7 +87,7 @@
                                 <isinclude template="product/components/pricing/main" />
                             </div>
 
-                            <isinclude template="klarnapayments/modules.isml"/>
+                            <isinclude template="kosm/modules.isml"/>
                             <iskosmpdp p_price="${product.price.sales}" />
 
                             <!-- Cart and [Optionally] Apple Pay -->

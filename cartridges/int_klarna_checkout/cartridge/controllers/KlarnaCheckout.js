@@ -21,12 +21,12 @@ var HookMgr = require('dw/system/HookMgr');
 /* Script Modules */
 var app = require('*/cartridge/scripts/app');
 var guard = require('*/cartridge/scripts/guard');
-var utils = require('*/cartridge/scripts/util/KlarnaHelper');
-var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/KlarnaConstants.js').PAYMENT_METHOD;
-var FRAUD_STATUS = require('*/cartridge/scripts/util/KlarnaConstants').FRAUD_STATUS;
-var KlarnaCartModel = require('*/cartridge/scripts/models/KlarnaCartModel');
+var utils = require('*/cartridge/scripts/util/klarnaHelper');
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
+var FRAUD_STATUS = require('*/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
+var KlarnaCartModel = require('*/cartridge/scripts/models/klarnaCartModel');
 var KlarnaPlaceOrderController = require('*/cartridge/controllers/KlarnaPlaceOrder');
-var KlarnaOrderService = require('*/cartridge/scripts/services/KlarnaOrderService');
+var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
 var TransientAddress = app.getModel('TransientAddress');
 
 
@@ -176,7 +176,7 @@ function update() {
         cart.restore(klarnaOrderObject);
     });
 
-    var KlarnaOrderUpdateResponseBuilder = require('*/cartridge/scripts/order/KlarnaOrderUpdateResponseBuilder');
+    var KlarnaOrderUpdateResponseBuilder = require('*/cartridge/scripts/order/klarnaOrderUpdateResponseBuilder');
     var klarnaOrderUpdateResponseBuilder = new KlarnaOrderUpdateResponseBuilder();
     var orderUpdateResponse = klarnaOrderUpdateResponseBuilder.buildResponse({
         basket: cart.object,

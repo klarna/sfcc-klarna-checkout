@@ -18,9 +18,9 @@ var Order = require('dw/order/Order');
 
 /* Script Modules */
 var app = require('*/cartridge/scripts/app');
-var KlarnaCartModel = require('*/cartridge/scripts/models/KlarnaCartModel');
-var KlarnaOrderService = require('*/cartridge/scripts/services/KlarnaOrderService');
-var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts//util/KlarnaConstants.js').PAYMENT_METHOD;
+var KlarnaCartModel = require('*/cartridge/scripts/models/klarnaCartModel');
+var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
+var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts//util/klarnaConstants.js').PAYMENT_METHOD;
 
 /**
  * Set SFCC Order Customer
@@ -109,7 +109,7 @@ function createOrder(klarnaOrderObject, localeObject) {
 
             var regionOptions;
             if (!localeObject) {
-                var utils = require('*/cartridge/scripts/util/KlarnaHelper');
+                var utils = require('*/cartridge/scripts/util/klarnaHelper');
                 regionOptions = utils.getLocaleObject();
             } else {
                 regionOptions = localeObject;

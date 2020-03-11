@@ -95,7 +95,7 @@ server.get('UpdateShippingAddress', server.middleware.https, function (req, res,
         var countryCode = req.querystring.country.toLowerCase();
         // Klarna JS API returns ISO3 country codes in this case, so we use map to get ISO2 country codes.
         if (countryCode && countryCode.length === 3) {
-            var countryCodesMap = require('*/cartridge/config/countryCodesMap');
+            var countryCodesMap = require('*/cartridge/countryCodesMap');
             countryCode = countryCodesMap[countryCode];
         }
 

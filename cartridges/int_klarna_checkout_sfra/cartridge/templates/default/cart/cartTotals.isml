@@ -46,5 +46,5 @@
     </div>
 </div>
 
-<isinclude template="klarnapayments/modules.isml"/>
+<isinclude template="kosm/modules.isml"/>
 <iskosmcart />

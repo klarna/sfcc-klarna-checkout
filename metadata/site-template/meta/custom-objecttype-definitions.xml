@@ -759,6 +759,14 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
+             <attribute-definition attribute-id="osmUCI">
+                <display-name xml:lang="x-default">On-site messaging UCI</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
         </attribute-definitions>
         <group-definitions>
             <attribute-group group-id="custom">
@@ -773,6 +781,7 @@
                 <attribute attribute-id="osmCartTagId"/>
                 <attribute attribute-id="osmPDPEnabled"/>
                 <attribute attribute-id="osmPDPTagId"/>
+                <attribute attribute-id="osmUCI"/>
             </attribute-group>
         </group-definitions>
     </custom-type>
