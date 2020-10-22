@@ -1,7 +1,7 @@
 {
     "init": [],
     "name": "klarnacheckout",
-    "version": "20.1.0",
+    "version": "20.1.1",
     "description": "Salesforce Commerce Cloud | Klarna Checkout Integration",
     "main": "index.js",
     "author": "Nikolay Kunev <nikolay.kynev@tryzens.com>",
@@ -24,10 +24,10 @@
         "uploadSfra": "sgmf-scripts --uploadCartridge int_klarna_checkout_sfra",
         "uploadSitegenesis": "sgmf-scripts --uploadCartridge int_klarna_checkout",
         "uploadAll": "sgmf-scripts --uploadCartridge int_klarna_checkout && sgmf-scripts --uploadCartridge int_klarna_checkout_sfra",
-		"compile:js": "sgmf-scripts --compile js",
-		"build": "npm run compile:js",
+        "compile:js": "sgmf-scripts --compile js",
+        "build": "npm run compile:js",
         "lint:js": "sgmf-scripts --lint js",
-		"lint": "npm run lint:js"
+        "lint": "npm run lint:js"
     },
     "contributors": [
         {
@@ -41,6 +41,10 @@
         {
             "name": "Ivaylo Pashov",
             "email": "Ivaylo.Pashov@tryzens.com"
+        },
+        {
+            "name": "Antonia Dimitrova",
+            "email": "Antonia.Dimitrova@tryzens.com"
         }
     ],
     "license": ""

@@ -11,6 +11,7 @@ var Site = require('dw/system/Site');
 /* Script Modules */
 var Utils = require('*/cartridge/scripts/checkout/Utils');
 var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
+var SERVICE_USER_AGENTS = require('*/cartridge/scripts/util/klarnaConstants').SERVICE_USER_AGENTS;
 
 /**
  * Handles Klarna Fraud Status
@@ -75,7 +76,9 @@ function handleFraudStatus(klarnaFraudStatus, isPendingOrder) {
  * @return {Object} creation result, if successful { success: true }, otherwise { error: true }
 */
 function createVCNSettlement(order, klarnaOrderID, localeObject) {
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
 
     var response = klarnaOrderService.createVCNSettlement(klarnaOrderID, localeObject);
 
@@ -84,31 +87,14 @@ function createVCNSettlement(order, klarnaOrderID, localeObject) {
     }
 
     try {
-        var Cypher = require('dw/crypto/Cipher');
-        var Encoding = require('dw/crypto/Encoding');
-        var VCNPrivateKey = Site.getCurrent().getCustomPreferenceValue('vcnPrivateKey');
-        var cypher = new Cypher();
-
-        var keyEncryptedBase64 = response.cards[0].aes_key;
-        var keyEncryptedBytes = Encoding.fromBase64(keyEncryptedBase64);
-        var keyDecrypted = cypher.decryptBytes(keyEncryptedBytes, VCNPrivateKey, 'RSA/ECB/PKCS1PADDING', null, 0);
-        var keyDecryptedBase64 = Encoding.toBase64(keyDecrypted);
-        var cardDataEncryptedBase64 = response.cards[0].pci_data;
-        var cardDataEncryptedBytes = Encoding.fromBase64(cardDataEncryptedBase64);
-        var cardDecrypted = cypher.decryptBytes(cardDataEncryptedBytes, keyDecryptedBase64, 'AES/CTR/NoPadding', response.cards[0].iv, 0);
-
-        var cardDecryptedUtf8 = decodeURIComponent(cardDecrypted);
-        var cardObject = JSON.parse(cardDecryptedUtf8);
-        var expiryDateArray = cardObject.expiry_date.split('/');
-
         Transaction.wrap(function () {
             var orderObj = order;
             orderObj.custom.kcVCNBrand = response.cards[0].brand;
-            orderObj.custom.kcVCNCSC = cardObject.cvv;
-            orderObj.custom.kcVCNExpirationMonth = expiryDateArray[0];
-            orderObj.custom.kcVCNExpirationYear = expiryDateArray[1];
             orderObj.custom.kcVCNHolder = response.cards[0].holder;
-            orderObj.custom.kcVCNPAN = cardObject.pan;
+            orderObj.custom.kcVCNCardID = response.cards[0].card_id;
+            orderObj.custom.kcVCNPCIData = response.cards[0].pci_data;
+            orderObj.custom.kcVCNIV = response.cards[0].iv;
+            orderObj.custom.kcVCNAESKey = response.cards[0].aes_key;
             orderObj.custom.kcIsVCN = true;
         });
     } catch (e) {
@@ -173,7 +159,9 @@ function Authorize(args) {
         paymentInstrument.paymentTransaction.paymentProcessor = paymentProcessor;
     });
 
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
 
     if (!klarnaOrderObj.fraud_status) {
         klarnaOrderObj = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
