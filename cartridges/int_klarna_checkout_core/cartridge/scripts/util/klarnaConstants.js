@@ -24,8 +24,14 @@ var CONTENT_TYPE = 'application/vnd.klarna.internal.emd-v2+json';
 
 var KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = 'klarna_cgbp';
 
+var SERVICE_USER_AGENTS = {
+    SG: 'SFCC SG Klarna Checkout 20.1.1',
+    SFRA: 'SFCC SFRA Klarna Checkout 20.1.1'
+}
+
 module.exports.FRAUD_STATUS = FRAUD_STATUS;
 module.exports.PAYMENT_METHOD = PAYMENT_METHOD;
 module.exports.ORDER_LINE_TYPE = ORDER_LINE_TYPE;
 module.exports.CONTENT_TYPE = CONTENT_TYPE;
 module.exports.KLARNA_CUSTOMER_GROUPS_ADJUSTMENT = KLARNA_CUSTOMER_GROUPS_ADJUSTMENT;
+module.exports.SERVICE_USER_AGENTS = SERVICE_USER_AGENTS;

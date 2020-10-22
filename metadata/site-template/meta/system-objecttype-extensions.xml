@@ -312,31 +312,7 @@
             </attribute-definition>
             <attribute-definition attribute-id="kcVCNBrand">
                 <display-name xml:lang="x-default">VCN Brand</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card Brand</description>
-                <type>string</type>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-                <min-length>0</min-length>
-            </attribute-definition>
-            <attribute-definition attribute-id="kcVCNCSC">
-                <display-name xml:lang="x-default">VCN CSC</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card csc</description>
-                <type>string</type>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-                <min-length>0</min-length>
-            </attribute-definition>
-            <attribute-definition attribute-id="kcVCNExpirationMonth">
-                <display-name xml:lang="x-default">VCN Expiration Month</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card expiration month</description>
-                <type>string</type>
-                <mandatory-flag>false</mandatory-flag>
-                <externally-managed-flag>false</externally-managed-flag>
-                <min-length>0</min-length>
-            </attribute-definition>
-            <attribute-definition attribute-id="kcVCNExpirationYear">
-                <display-name xml:lang="x-default">VCN Expiration Year</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card expiration year</description>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number card Brand</description>
                 <type>string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
@@ -344,15 +320,38 @@
             </attribute-definition>
             <attribute-definition attribute-id="kcVCNHolder">
                 <display-name xml:lang="x-default">VCN Holder</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card holder name</description>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number card holder name</description>
                 <type>string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
                 <min-length>0</min-length>
             </attribute-definition>
-            <attribute-definition attribute-id="kcVCNPAN">
-                <display-name xml:lang="x-default">VCN PAN</display-name>
-                <description xml:lang="x-default">Holding the Klarna Virtual Card Network card pan</description>
+            <attribute-definition attribute-id="kcVCNAESKey">
+                <display-name xml:lang="x-default">VCN AES Key</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number AES Key</description>
+                <type>text</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNCardID">
+                <display-name xml:lang="x-default">VCN Card ID</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number Card ID</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNIV">
+                <display-name xml:lang="x-default">VCN Initialization Vector</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number Initialization Vector</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="kcVCNPCIData">
+                <display-name xml:lang="x-default">VCN PCI Data</display-name>
+                <description xml:lang="x-default">Holding the Klarna Virtual Card Number Encrypted Card Data</description>
                 <type>string</type>
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
@@ -362,12 +361,7 @@
         <group-definitions>
             <attribute-group group-id="Klarna_Checkout">
                 <attribute attribute-id="kcIsVCN"/>
-                <attribute attribute-id="kcVCNHolder"/>
-                <attribute attribute-id="kcVCNPAN"/>
-                <attribute attribute-id="kcVCNExpirationYear"/>
-                <attribute attribute-id="kcVCNExpirationMonth"/>
-                <attribute attribute-id="kcVCNCSC"/>
-                <attribute attribute-id="kcVCNBrand"/>
+                <attribute attribute-id="kcVCNCardID"/>
             </attribute-group>
         </group-definitions>
     </type-extension>

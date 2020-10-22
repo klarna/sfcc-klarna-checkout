@@ -1,5 +1,5 @@
 # Klarna Checkout 2017-2020 Link Cartridge
-Version 20.1.0
+Version 20.1.1
 
 
 ## Integration

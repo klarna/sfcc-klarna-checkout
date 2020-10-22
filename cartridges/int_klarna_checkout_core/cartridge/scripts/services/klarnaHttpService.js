@@ -10,6 +10,7 @@ var klarnaService = LocalServiceRegistry.createService(Site.getCurrent().getCust
     createRequest: function (svc, requestObj) {
         svc.addHeader('Content-Type', 'application/json');
         svc.addHeader('Accept', 'application/json');
+        svc.addHeader('User-Agent', requestObj.userAgent);
         svc.setCredentialID(requestObj.credentialID);
         svc.setURL(null);
         svc.setURL(svc.getURL().replace(/\/$/, '') + requestObj.urlPath);
@@ -39,11 +40,17 @@ var klarnaService = LocalServiceRegistry.createService(Site.getCurrent().getCust
  * @constructor
  * @classdesc Klarna HTTP service wrapper
  */
-function KlarnaHttpService() {
+function KlarnaHttpService(params) {
+    var userAgent = '';
+    if (typeof params === 'object' && params.userAgent) {
+        userAgent = params.userAgent;
+    }
     this.logger = Logger.getLogger('Klarna');
 
     this.call = function (urlPath, httpVerb, credentialID, requestBody) {
-        var requestObject = {};
+        var requestObject = {
+            userAgent: userAgent
+        };
 
         if (credentialID) {
             requestObject.credentialID = credentialID;

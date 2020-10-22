@@ -24,6 +24,7 @@ var guard = require('*/cartridge/scripts/guard');
 var utils = require('*/cartridge/scripts/util/klarnaHelper');
 var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts/util/klarnaConstants.js').PAYMENT_METHOD;
 var FRAUD_STATUS = require('*/cartridge/scripts/util/klarnaConstants').FRAUD_STATUS;
+var SERVICE_USER_AGENTS = require('*/cartridge/scripts/util/klarnaConstants').SERVICE_USER_AGENTS;
 var KlarnaCartModel = require('*/cartridge/scripts/models/klarnaCartModel');
 var KlarnaPlaceOrderController = require('*/cartridge/controllers/KlarnaPlaceOrder');
 var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
@@ -139,7 +140,9 @@ function start(context) {
     });
 
     var checkoutSnippet;
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
     var klarnaCountry = session.privacy.klarnaCountry;
     var klarnaOrderID = (klarnaCountry && localeObject.custom.country !== klarnaCountry) ? null : session.privacy.klarnaOrderID;
 
@@ -277,7 +280,9 @@ function confirmation() {
 
     var localeObject = utils.getLocaleObject(klarnaCountry);
 
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
 
     var klarnaOrderObject = klarnaOrderService.getOrder(klarnaOrderID, localeObject);
 
@@ -311,7 +316,9 @@ function updateKlarnaCheckout() {
         cart.calculate();
     });
 
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
     var isUpdated;
 
     if (!session.privacy.klarnaOrderID) {
@@ -342,7 +349,9 @@ function push() {
 
     var localeObject = utils.getLocaleObject(klarnaCountry);
 
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
 
     var klarnaOrderObject = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
 
@@ -493,7 +502,9 @@ function notification() {
     Logger.getLogger('Klarna').info('Received notification for Klarna order with ID: {0}.', klarnaOrderID);
 
     var localeObject = utils.getLocaleObject(klarnaCountry);
-    var klarnaOrderService = new KlarnaOrderService();
+    var klarnaOrderService = new KlarnaOrderService({
+        userAgent: SERVICE_USER_AGENTS.SG
+    });
     var klarnaOrderObject = klarnaOrderService.getOrder(klarnaOrderID, localeObject, true);
 
     if (klarnaOrderObject) {

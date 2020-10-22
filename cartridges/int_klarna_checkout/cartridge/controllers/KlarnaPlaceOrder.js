@@ -21,6 +21,7 @@ var app = require('*/cartridge/scripts/app');
 var KlarnaCartModel = require('*/cartridge/scripts/models/klarnaCartModel');
 var KlarnaOrderService = require('*/cartridge/scripts/services/klarnaOrderService');
 var KLARNA_PAYMENT_METHOD = require('*/cartridge/scripts//util/klarnaConstants.js').PAYMENT_METHOD;
+var SERVICE_USER_AGENTS = require('*/cartridge/scripts/util/klarnaConstants').SERVICE_USER_AGENTS;
 
 /**
  * Set SFCC Order Customer
@@ -115,7 +116,9 @@ function createOrder(klarnaOrderObject, localeObject) {
                 regionOptions = localeObject;
             }
 
-            var klarnaOrderService = new KlarnaOrderService();
+            var klarnaOrderService = new KlarnaOrderService({
+                userAgent: SERVICE_USER_AGENTS.SG
+            });
             klarnaOrderService.updateOrderMerchantReferences(klarnaOrderObject.order_id, regionOptions, order.orderNo);
         }
 

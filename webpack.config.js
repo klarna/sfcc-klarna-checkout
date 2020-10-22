@@ -9,8 +9,8 @@ module.exports = [{
     mode: 'production',
     name: 'js',
     entry: {
-        klarnaCheckout: path.join(__dirname, cartridgePath + '/client/js/default/klarnaCheckout.js'),
-        klarnaOsm: path.join(__dirname, cartridgePath + '/client/js/default/klarnaOsm.js')
+        klarnaCheckout: path.join(__dirname, cartridgePath + '/client/default/js/klarnaCheckout.js'),
+        klarnaOsm: path.join(__dirname, cartridgePath + '/client/default/js/klarnaOsm.js')
     },
     output: {
         path: path.resolve(cartridgePath + './static/default/js/'),

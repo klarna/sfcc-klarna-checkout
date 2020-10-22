@@ -7,14 +7,21 @@ var StringUtils = require('dw/util/StringUtils');
 var KlarnaHttpService = require('*/cartridge/scripts/services/klarnaHttpService');
 var KlarnaApiContext = require('*/cartridge/scripts/services/klarnaApiContext');
 var KlarnaOrderRequestBuilder = require('*/cartridge/scripts/order/klarnaOrderRequestBuilder');
+var SERVICE_USER_AGENTS = require('*/cartridge/scripts/util/klarnaConstants').SERVICE_USER_AGENTS;
 
 /**
  * @constructor
  * @classdesc Klarna Checkout API service wrapper
  */
-function KlarnaOrderService() {
+function KlarnaOrderService(params) {
+    var userAgent = SERVICE_USER_AGENTS.SFRA;
+    if (typeof params === 'object' && params.userAgent) {
+        userAgent = params.userAgent;
+    }
     this.logger = Logger.getLogger('Klarna');
-    this.klarnaHttpService = new KlarnaHttpService();
+    this.klarnaHttpService = new KlarnaHttpService({
+        userAgent: userAgent
+    });
     this.klarnaApiContext = new KlarnaApiContext();
 
     /**
