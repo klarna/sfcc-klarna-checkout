@@ -1,10 +1,10 @@
 {
     "init": [],
     "name": "klarnacheckout",
-    "version": "20.1.1",
+    "version": "22.1.0",
     "description": "Salesforce Commerce Cloud | Klarna Checkout Integration",
     "main": "index.js",
-    "author": "Nikolay Kunev <nikolay.kynev@tryzens.com>",
+    "author": "Tihomir Ivanov <tihomir.ivanov@tryzens.com>",
     "devDependencies": {
         "eslint-plugin-sitegenesis": "~1.0.0",
         "eslint-config-airbnb-base": "^5.0.1",
@@ -45,6 +45,10 @@
         {
             "name": "Antonia Dimitrova",
             "email": "Antonia.Dimitrova@tryzens.com"
+        },
+        {
+            "name": "Tihomir Ivanov",
+            "email": "Tihomir.Ivanov@tryzens.com"
         }
     ],
     "license": ""
