@@ -10,7 +10,7 @@ server.extend(page);
 /**
  * Render the Klarna confirmation snippet
  */
-server.append('Confirm', server.middleware.https, function (req, res, next) {
+server.replace('Confirm', server.middleware.https, function (req, res, next) {
     var URLUtils = require('dw/web/URLUtils');
     var Locale = require('dw/util/Locale');
     var BasketMgr = require('dw/order/BasketMgr');

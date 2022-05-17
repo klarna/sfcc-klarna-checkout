@@ -546,6 +546,7 @@
         this.context.options.color_checkbox_checkmark = Site.getCurrent().getCustomPreferenceValue('kcColorCheckboxCheckmark');
         this.context.options.color_header = Site.getCurrent().getCustomPreferenceValue('kcColorHeader');
         this.context.options.color_link = Site.getCurrent().getCustomPreferenceValue('kcColorLink');
+        this.context.options.vat_removed = Site.getCurrent().getCustomPreferenceValue('kcVatRemoved');
 
         return this;
     };

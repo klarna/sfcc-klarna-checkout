@@ -1,7 +1,7 @@
 {
     "init": [],
     "name": "klarnacheckout",
-    "version": "22.1.0",
+    "version": "22.2.0",
     "description": "Salesforce Commerce Cloud | Klarna Checkout Integration",
     "main": "index.js",
     "author": "Tihomir Ivanov <tihomir.ivanov@tryzens.com>",

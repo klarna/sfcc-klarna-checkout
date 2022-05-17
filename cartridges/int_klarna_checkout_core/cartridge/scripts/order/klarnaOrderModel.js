@@ -70,6 +70,7 @@
         this.color_checkbox_checkmark = '#FF9900';
         this.color_header = '#FF9900';
         this.color_link = '#FF9900';
+        this.vat_removed = false;
     }
 
     /**

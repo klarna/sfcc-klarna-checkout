@@ -264,6 +264,14 @@
                 <mandatory-flag>false</mandatory-flag>
                 <externally-managed-flag>false</externally-managed-flag>
             </attribute-definition>
+            <attribute-definition attribute-id="kcVatRemoved">
+                <display-name xml:lang="x-default">Klarna Checkout Vat Removed?</display-name>
+                <description xml:lang="x-default">Klarna Checkout Toggle to VAT removed</description>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <default-value>false</default-value>
+            </attribute-definition>
         </custom-attribute-definitions>
         <group-definitions>
             <attribute-group group-id="KlarnaCheckout">
@@ -297,6 +305,7 @@
                 <attribute attribute-id="vcnPrivateKey"/>
                 <attribute attribute-id="vcnPublicKey"/>
                 <attribute attribute-id="kcVCNkeyId"/>
+                <attribute attribute-id="kcVatRemoved"/>
             </attribute-group>
         </group-definitions>
     </type-extension>

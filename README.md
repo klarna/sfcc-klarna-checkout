@@ -1,5 +1,5 @@
 # Klarna Checkout 2017-2022 Link Cartridge
-Version 22.1.0
+Version 22.2.0
 
 
 ## Integration

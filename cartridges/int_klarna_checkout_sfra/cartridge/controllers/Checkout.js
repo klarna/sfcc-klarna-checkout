@@ -36,12 +36,6 @@ function prepareShipping(basket, localeObject) {
     });
 }
 
-server.prepend('Login', server.middleware.get, function (req, res, next) {
-    var URLUtils = require('dw/web/URLUtils');
-    res.redirect(URLUtils.https('Checkout-Begin'));
-    next();
-});
-
 /**
  * Begin the Klarna Checkout process
  */
